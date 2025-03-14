@@ -3,8 +3,20 @@ from app.db.init_db import Base
 from app.db.models.abstract import MainMixin
 
 
-class PaginationModel(Base, MainMixin):
-    __tablename__ = "pagination"
+class PaginationBillModel(Base, MainMixin):
+    __tablename__ = "pagination_billable"
+
+    url = Column(String)
+
+    def __repr__(self):
+        return f"PaginationModel({self.url})"
+
+    def __init__(self, url):
+        self.url = url
+
+
+class PaginationNonBillModel(Base, MainMixin):
+    __tablename__ = "pagination_non_billable"
 
     url = Column(String)
 
