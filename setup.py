@@ -35,6 +35,7 @@ setup(
         "python-dotenv==1.0.1",
         "python-multipart==0.0.20",
         "PyYAML==6.0.2",
+        "redis~=5.2.1",
         "rich==13.9.4",
         "rich-toolkit==0.13.2",
         "shellingham==1.5.4",

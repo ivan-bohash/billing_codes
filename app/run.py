@@ -1,50 +1,44 @@
-import uvicorn
-from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-from app.db.init_db import engine, Base, get_db
-from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
-from app.db.models.url import UrlBillModel, UrlNonBillModel
-from app.db.models.detail import DetailBillModel, DetailNonBillModel
-
-app = FastAPI()
-Base.metadata.create_all(bind=engine)
+from rq import Queue, Worker
+from rq_scheduler import Scheduler
+from app.config import settings
+from app.extensions.rq_ext.redis_worker import RedisWorker
 
 
-@app.get("/billable_pagination")
-async def get_pagination(db: Session = Depends(get_db)):
-    db_data = db.query(PaginationBillModel).all()
-    return db_data
+class RQWorker(RedisWorker):
+    def __init__(self):
+        super().__init__()
+        self.queue_names = list(settings.redis["queue_name"].keys())
+        self.queue = Queue("low", connection=self.connection)
+        self.worker = Worker(
+            queues=self.queue_names,
+            connection=self.connection,
+        )
+
+    def run(self):
+        for job in self.jobs:
+            self.queue.enqueue(job["func"], job["params"])
+            # self.queue.enqueue(job["func"])
+
+        self.worker.work()
 
 
-@app.get("/non_billable_pagination")
-async def get_pagination(db: Session = Depends(get_db)):
-    db_data = db.query(PaginationNonBillModel).all()
-    return db_data
+class PeriodicTask(RedisWorker):
+    def __init__(self):
+        super().__init__()
 
+        self.queue = Queue("low", connection=self.connection)
+        self.queue_name = settings.redis["queue_name"]["low"]
+        self.scheduler = Scheduler(
+            queue=self.queue,
+            connection=self.connection
+        )
 
-@app.get("/urls_billable")
-async def get_urls(db: Session = Depends(get_db)):
-    db_data = db.query(UrlBillModel).all()
-    return db_data
-
-
-@app.get("/urls_non_billable")
-async def get_urls(db: Session = Depends(get_db)):
-    db_data = db.query(UrlNonBillModel).all()
-    return db_data
-
-
-@app.get("/details_billable")
-async def get_details(db: Session = Depends(get_db)):
-    db_data = db.query(DetailBillModel).all()
-    return db_data
-
-
-@app.get("/details_non_billable")
-async def get_details(db: Session = Depends(get_db)):
-    db_data = db.query(DetailNonBillModel).all()
-    return db_data
-
-
-if __name__ == "__main__":
-    uvicorn.run("run:app", reload=True)
+    def run(self):
+        for job in self.jobs:
+            self.scheduler.cron(
+                cron_string=job["cron_string"],
+                func=job["func"],
+                args=job["args"],
+                queue_name=self.queue_name,
+                timeout=600
+            )

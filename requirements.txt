@@ -6,3 +6,5 @@ lxml~=5.3.1
 requests~=2.32.3
 uvicorn~=0.34.0
 fastapi~=0.115.8
+redis~=5.2.1
+rq~=2.1.0

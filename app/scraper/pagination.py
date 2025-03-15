@@ -5,38 +5,54 @@ from app.config import settings
 from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
 
 
-def extract_pagination_urls(type):
-    if type == "billable":
-        base_url = "https://www.icd10data.com/ICD10CM/Codes/Rules/Billable_Specific_Codes/"
-    elif type == "non_billable":
-        base_url = "https://www.icd10data.com/ICD10CM/Codes/Rules/Non_Billable_Specific_Codes/"
+class Pagination:
+    def __init__(self, base_url, pagination_model):
+        self.headers = settings.headers
+        self.base_url = base_url
+        self.pagination_model = pagination_model
+        # self.proxies = {"http": "72.10.160.171:1959"}
 
-    headers = settings.headers
-    # proxies = {"http": "72.10.160.171:1959"}
+    def extract_pagination_urls(self):
+        response_html = requests.get(url=self.base_url, headers=self.headers).content
+        tree = html.fromstring(response_html)
+        last_index = int(
+            tree.xpath('//ul[@class="pagination"]/li[@class="PagedList-skipToLast"]/a/@href')[0].split('/')[-1]) + 1
 
-    response_html = requests.get(url=base_url, headers=headers).content
-    tree = html.fromstring(response_html)
+        urls = [f"{self.base_url}{i}" for i in range(1, last_index)]
 
-    last_index = int(
-        tree.xpath('//ul[@class="pagination"]/li[@class="PagedList-skipToLast"]/a/@href')[0].split('/')[-1]) + 1
+        return urls
 
-    urls = [f"{base_url}{i}" for i in range(1, last_index)]
-
-    return urls
-
-
-def add_to_db(type):
-    with SessionLocal() as db:
-        urls = extract_pagination_urls(type)
-        if type == "billable":
-            db_data = [PaginationBillModel(url=url) for url in urls]
-        elif type == "non_billable":
-            db_data = [PaginationNonBillModel(url=url) for url in urls]
-        db.add_all(db_data)
-        db.commit()
-        print(f"Done {len(db_data)}")
+    def add_to_db(self):
+        with SessionLocal() as db:
+            urls = self.extract_pagination_urls()
+            db_data = [self.pagination_model(url=url) for url in urls]
+            db.add_all(db_data)
+            db.commit()
+            print(f"Done {len(db_data)}")
 
 
-if __name__ == "__main__":
-    add_to_db(type="non_billable")
+class BillPagination(Pagination):
+    def __init__(self):
+        super().__init__(
+            base_url=settings.billable_url,
+            pagination_model=PaginationBillModel
+        )
 
+
+class NonBilPagination(Pagination):
+    def __init__(self):
+        super().__init__(
+            base_url=settings.non_billable_url,
+            pagination_model=PaginationNonBillModel
+        )
+
+
+def run_pagination_parser(parser_name):
+    if parser_name == "billable":
+        parser = BillPagination()
+    elif parser_name == "non_billable":
+        parser = NonBilPagination()
+    else:
+        raise ValueError("Unknown parser")
+
+    parser.add_to_db()
