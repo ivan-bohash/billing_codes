@@ -17,24 +17,6 @@ class Settings(BaseSettings):
         "Sec-Fetch-User": "?1"
     }
 
-    proxies: list = [
-        # "http://38.153.152.244:9594",
-        # "http://86.38.234.176:6630",
-        # "http://173.211.0.148:6641",
-        # "http://216.10.27.159:6837",
-        # "http://154.36.110.199:6853",
-        # "http://173.0.9.70:5653",
-        # "http://198.105.101.92:5721",
-        # "http://161.123.152.115:6360",
-        # "http://38.154.227.167:5868",
-        # "http://45.151.162.198:6600"
-    ]
-
-    proxy_auth: dict = {
-        "login": "wizitbfg",
-        "password": "1m30nbigz04a"
-    }
-
     billable_url: str = "https://www.icd10data.com/ICD10CM/Codes/Rules/Billable_Specific_Codes/"
     non_billable_url: str = "https://www.icd10data.com/ICD10CM/Codes/Rules/Non_Billable_Specific_Codes/"
 

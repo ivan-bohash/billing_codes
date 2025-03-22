@@ -1,9 +1,18 @@
-from app.run import CronJobScheduler
-from app.periodic_tasks.jobs import scheduler_jobs
+from app.run import RQWorker, PeriodicTask
+from app.periodic_tasks.jobs import rq_jobs, scheduler_jobs
+
+
+def run_rq():
+    runner = RQWorker()
+
+    for job in rq_jobs:
+        runner.add_task(job=job)
+
+    runner.run()
 
 
 def run_scheduler():
-    runner = CronJobScheduler()
+    runner = PeriodicTask()
 
     for job in scheduler_jobs:
         runner.add_task(job)
@@ -12,4 +21,5 @@ def run_scheduler():
 
 
 if __name__ == "__main__":
-    run_scheduler()
+    run_rq()
+
