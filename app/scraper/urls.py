@@ -1,9 +1,10 @@
+from sqlalchemy import text
 import asyncio
 import aiohttp
 from lxml import html
 import itertools
 from app.config import settings
-from app.db.init_db import SessionLocal
+from app.db.init_db import get_db
 from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
 from app.db.models.url import UrlBillModel, UrlNonBillModel
 
@@ -54,24 +55,28 @@ class UrlParser:
 
         return list(itertools.chain(*result))
 
-    async def add_to_db(self):
-        with SessionLocal() as db:
-            db_urls = db.query(self.pagination_model).all()
-            urls = [db_url.url for db_url in db_urls]
-            icd_data = await self.main(urls=urls)
+    async def add_to_db(self, db=next(get_db())):
+        with db.connection() as conn:
+            db_data = conn.execute(text(
+                f"SELECT url FROM {self.pagination_model.__tablename__}"
+            )).fetchall()
+            urls = [url[0] for url in db_data]
+            print(f"Hello form URLS: len {len(urls)}")
 
-            db_data = [
-                self.url_model(icd_code=data["icd_code"], url=data["url"])
-                for data in icd_data
-            ]
+            # icd_data = await self.main(urls=urls)
+            #
+            # db_data = [
+            #     self.url_model(icd_code=data["icd_code"], url=data["url"])
+            #     for data in icd_data
+            # ]
+            #
+            # db.add_all(db_data)
+            # db.commit()
+            # print(f"Added: {len(urls)} items")
+            # print("Done")
 
-            db.add_all(db_data)
-            db.commit()
-            print(f"Added: {len(urls)} items")
-            print("Done")
 
-
-class UrlParserBill(UrlParser):
+class UrlBillable(UrlParser):
     def __init__(self):
         super().__init__(
             pagination_model=PaginationBillModel,
@@ -79,7 +84,7 @@ class UrlParserBill(UrlParser):
         )
 
 
-class UrlParserNonBill(UrlParser):
+class UrlNonBillable(UrlParser):
     def __init__(self):
         super().__init__(
             pagination_model=PaginationNonBillModel,
@@ -89,9 +94,9 @@ class UrlParserNonBill(UrlParser):
 
 def run_url_parser(parser_name):
     if parser_name == "billable":
-        parser = UrlParserBill()
+        parser = UrlBillable()
     elif parser_name == "non_billable":
-        parser = UrlParserNonBill()
+        parser = UrlNonBillable()
     else:
         raise ValueError("Unknown parser")
 

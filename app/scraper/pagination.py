@@ -5,12 +5,11 @@ from app.config import settings
 from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
 
 
-class Pagination:
+class PaginationParser:
     def __init__(self, base_url, pagination_model):
         self.headers = settings.headers
         self.base_url = base_url
         self.pagination_model = pagination_model
-        # self.proxies = {"http": "72.10.160.171:1959"}
 
     def extract_pagination_urls(self):
         response_html = requests.get(url=self.base_url, headers=self.headers).content
@@ -28,10 +27,10 @@ class Pagination:
             db_data = [self.pagination_model(url=url) for url in urls]
             db.add_all(db_data)
             db.commit()
-            print(f"Done {len(db_data)}")
+            print(f"Done {self.pagination_model} {len(db_data)}")
 
 
-class BillPagination(Pagination):
+class PaginationBillable(PaginationParser):
     def __init__(self):
         super().__init__(
             base_url=settings.billable_url,
@@ -39,7 +38,7 @@ class BillPagination(Pagination):
         )
 
 
-class NonBilPagination(Pagination):
+class PaginationNonBillable(PaginationParser):
     def __init__(self):
         super().__init__(
             base_url=settings.non_billable_url,
@@ -49,9 +48,9 @@ class NonBilPagination(Pagination):
 
 def run_pagination_parser(parser_name):
     if parser_name == "billable":
-        parser = BillPagination()
+        parser = PaginationBillable()
     elif parser_name == "non_billable":
-        parser = NonBilPagination()
+        parser = PaginationNonBillable()
     else:
         raise ValueError("Unknown parser")
 

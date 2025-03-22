@@ -1,10 +1,11 @@
 import aiohttp
 import asyncio
 from lxml import html
+from sqlalchemy import text
 import itertools
 import re
 from app.config import settings
-from app.db.init_db import SessionLocal
+from app.db.init_db import get_db
 from app.db.models.detail import DetailBillModel, DetailNonBillModel
 from app.db.models.url import UrlBillModel, UrlNonBillModel
 
@@ -31,7 +32,7 @@ class DetailParser:
         return icd_details
 
     async def get_all(self, session, url):
-        return await self.get_details(session, url)
+        return await self.get_details(session=session, url=url)
 
     async def run_all(self, urls):
         async with aiohttp.ClientSession() as session:
@@ -41,6 +42,7 @@ class DetailParser:
 
     async def main(self, urls, step=100):
         result = []
+        count = 0
 
         for i in range(0, len(urls), step):
             details_step = list(urls[i:i + step])
@@ -48,29 +50,39 @@ class DetailParser:
             result.append(result_nested)
 
             if i + step < len(urls):
-                print("Sleep...")
+                print(f"{i + 100}/{len(urls)} sleep 30 sec.")
+                count += 1
                 await asyncio.sleep(30)
+
+            if count == 10:
+                print("Sleep extra 60 sec.")
+                count = 0
+                await asyncio.sleep(60)
 
         return list(itertools.chain(*result))
 
-    async def add_to_db(self):
-        with SessionLocal() as db:
-            data_list = db.query(self.url_model).all()
-            urls = [item.url for item in data_list][:10]
+    async def add_to_db(self, db=next(get_db())):
+        with db.connection() as conn:
+            db_data = conn.execute(
+                text(f"SELECT url FROM {self.url_model.__tablename__}")
+            ).fetchall()
 
-            icd_data = await self.main(urls=urls)
-            db_data = [
-                self.detail_model(icd_code=data["icd_code"], detail=data["detail"])
-                for data in icd_data
-            ]
+            urls = [url[0] for url in db_data]
+            print(f"Hello form DETAILS: len {len(urls)}")
 
-            db.add_all(db_data)
-            db.commit()
-            print(f"Added: {len(urls)} items")
-            print("Done")
+            # icd_data = await self.main(urls=urls)
+            # db_data = [
+            #     self.detail_model(icd_code=data["icd_code"], detail=data["detail"])
+            #     for data in icd_data
+            # ]
+            #
+            # db.add_all(db_data)
+            # db.commit()
+            # print(f"Added: {len(urls)} items")
+            # print("Done")
 
 
-class DetailParserBill(DetailParser):
+class DetailBillable(DetailParser):
     def __init__(self):
         super().__init__(
             url_model=UrlBillModel,
@@ -78,7 +90,7 @@ class DetailParserBill(DetailParser):
         )
 
 
-class DetailParserNonBill(DetailParser):
+class DetailNonBillable(DetailParser):
     def __init__(self):
         super().__init__(
             url_model=UrlNonBillModel,
@@ -88,9 +100,9 @@ class DetailParserNonBill(DetailParser):
 
 def run_detail_parser(parser_name):
     if parser_name == "billable":
-        parser = DetailParserBill()
+        parser = DetailBillable()
     elif parser_name == "non_billable":
-        parser = DetailParserNonBill()
+        parser = DetailNonBillable()
     else:
         raise ValueError("Unknown parser")
 
