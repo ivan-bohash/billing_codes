@@ -44,16 +44,24 @@ class UrlParser:
 
     async def main(self, urls, step=100):
         result = []
+        start = 0
 
-        for i in range(0, len(urls), step):
-            urls_step = urls[i:i + step]
-            nested_result = await self.run_all(urls_step)
-            result.append(nested_result)
+        while start < len(urls):
+            try:
+                end = min(start + step, len(urls))
+                urls_step_slice = urls[start:end]
+                nested_result = await self.run_all(urls_step_slice)
+                result.append(nested_result)
+                start += step
+                print(f"{start}/{len(urls)}")
 
-            if i + step < len(urls):
-                print(f"{i + step}/{len(urls)}")
-                print(f"Sleep 30 sec")
-                await asyncio.sleep(30)
+                if end != len(urls):
+                    print(f"Sleep 30 sec")
+                    await asyncio.sleep(30)
+
+            except Exception as e:
+                print(f"Exception: {e}.\nSleep 2 min before next execution.")
+                await asyncio.sleep(120)
 
         return list(itertools.chain(*result))
 
@@ -62,7 +70,7 @@ class UrlParser:
             db_data = conn.execute(text(
                 f"SELECT url FROM {self.pagination_model.__tablename__}"
             )).fetchall()
-            urls = [url[0] for url in db_data][:10]
+            urls = [url[0] for url in db_data]
             icd_data = await self.main(urls=urls)
 
             db_data = [
@@ -73,29 +81,6 @@ class UrlParser:
             db.add_all(db_data)
             db.commit()
             print(f"Done. Added: {len(urls)} items.")
-
-            # Check data difference between db and fetched data
-            # db data set
-            db_urls = conn.execute(text(
-                f"SELECT url FROM {UrlBillModel.__tablename__}"
-            )).fetchall()
-            db_urls_set = {db_url[0] for db_url in db_urls[:15]}
-            # fetched data set
-            fetch_urls_set = {data["url"] for data in icd_data[:10]}
-
-            print(f"Difference: {db_urls_set.symmetric_difference(fetch_urls_set)}")
-
-            # for db_url in db_urls:
-            #     if db_url[0] in icd_urls:
-            #         print(f"Url {db_url} exists")
-            # else:
-            #     print(f"Not {db_url} exists")
-
-            # url_exists = db.query(exists().where(self.url_model.url == data["url"])).scalar()
-            # if url_exists:
-            #     print("Exists")
-            # else:
-            #     print(f"Url: {data} does not exist")
 
 
 class UrlBillable(UrlParser):
@@ -123,20 +108,3 @@ def run_url_parser(parser_name):
         raise ValueError("Unknown parser")
 
     asyncio.run(parser.add_to_db())
-
-#
-# def check_exists():
-#     url_to_check = "https://www.icd10data.com/ICD10CM/Codes/A00-B99/A50-A64/A52-/A52.10"
-#     with SessionLocal() as session:
-#         url_exists = session.query(exists().where(UrlBillModel.url == url_to_check)).scalar()
-#
-#     if url_exists:
-#         print('User exists!')
-#         print(url_exists)
-#     else:
-#         print('User does not exist.')
-
-#
-# if __name__ == "__main__":
-#     parser = UrlBillable()
-#     asyncio.run(parser.add_to_db())

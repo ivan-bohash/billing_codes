@@ -5,11 +5,13 @@ from app.scraper.details import run_detail_parser
 rq_jobs = [
     {
         "func": run_pagination_parser,
-        "params": "billable"
+        "params": "billable",
+        "depends_on": None,
     },
     {
         "func": run_pagination_parser,
-        "params": "non_billable"
+        "params": "non_billable",
+        "depends_on": None,
     },
 ]
 
@@ -19,22 +21,26 @@ scheduler_jobs = [
         "func": run_url_parser,
         "cron_string": "* * * * *",
         "args": ["billable"],
+        "depends_on": "run_pagination_parser_billable",
     },
     {
         "func": run_url_parser,
         "cron_string": "* * * * *",
         "args": ["non_billable"],
+        "depends_on": "run_pagination_parser_non_billable",
     },
 
     # Details
     {
         "func": run_detail_parser,
         "cron_string": "* * * * *",
-        "args": ["billable"]
+        "args": ["billable"],
+        "depends_on": "run_url_parser_billable",
     },
     {
         "func": run_detail_parser,
         "cron_string": "* * * * *",
-        "args": ["non_billable"]
+        "args": ["non_billable"],
+        "depends_on": "run_url_parser_non_billable",
     }
 ]

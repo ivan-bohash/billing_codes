@@ -17,7 +17,6 @@ class RQWorker(RedisWorker):
     def run(self):
         for job in self.jobs:
             self.queue.enqueue(job["func"], job["params"])
-            # self.queue.enqueue(job["func"])
 
         self.worker.work()
 
@@ -34,11 +33,19 @@ class PeriodicTask(RedisWorker):
         )
 
     def run(self):
+        jod_ids = {}
+
         for job in self.jobs:
-            self.scheduler.cron(
+            job_name = f"{job['func'].__name__}_{job['args'][0]}"
+            depends_on = jod_ids.get(job["depends_on"]) if job["depends_on"] else None
+
+            scheduled_job = self.scheduler.cron(
                 cron_string=job["cron_string"],
                 func=job["func"],
                 args=job["args"],
+                depends_on=depends_on,
                 queue_name=self.queue_name,
                 timeout=600
             )
+
+            jod_ids[job_name] = scheduled_job.id
