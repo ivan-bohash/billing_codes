@@ -20,6 +20,7 @@ class UrlParser:
             base_urls = []
             response_html = await response.text()
             tree = html.fromstring(response_html)
+
             icd_hrefs = tree.xpath(
                 '//ul[following-sibling::div[@class="proper-ad-unit"]]//a[@class="identifier"]/@href'
             )
@@ -29,16 +30,17 @@ class UrlParser:
                     "icd_code": href.split('/')[-1],
                     "url": f'https://www.icd10data.com{href}'
                 })
+
         return base_urls
 
     async def get_all(self, session, url):
-        return await self.get_icd_urls(session, url)
+        return await self.get_icd_urls(session=session, url=url)
 
     async def run_all(self, urls):
         async with aiohttp.ClientSession() as session:
             tasks = [self.get_all(session, url) for url in urls]
-            gather_tasks = await asyncio.gather(*tasks)
-            return list(itertools.chain(*gather_tasks))
+            result = await asyncio.gather(*tasks)
+            return list(itertools.chain(*result))
 
     async def main(self, urls, step=100):
         result = []
@@ -49,8 +51,8 @@ class UrlParser:
             result.append(nested_result)
 
             if i + step < len(urls):
-                print(i + step)
-                print("Sleep...")
+                print(f"{i + step}/{len(urls)}")
+                print(f"Sleep 30 sec")
                 await asyncio.sleep(30)
 
         return list(itertools.chain(*result))
@@ -60,20 +62,40 @@ class UrlParser:
             db_data = conn.execute(text(
                 f"SELECT url FROM {self.pagination_model.__tablename__}"
             )).fetchall()
-            urls = [url[0] for url in db_data]
-            print(f"Hello form URLS: len {len(urls)}")
+            urls = [url[0] for url in db_data][:10]
+            icd_data = await self.main(urls=urls)
 
-            # icd_data = await self.main(urls=urls)
-            #
-            # db_data = [
-            #     self.url_model(icd_code=data["icd_code"], url=data["url"])
-            #     for data in icd_data
-            # ]
-            #
-            # db.add_all(db_data)
-            # db.commit()
-            # print(f"Added: {len(urls)} items")
-            # print("Done")
+            db_data = [
+                self.url_model(icd_code=data["icd_code"], url=data["url"])
+                for data in icd_data
+            ]
+
+            db.add_all(db_data)
+            db.commit()
+            print(f"Done. Added: {len(urls)} items.")
+
+            # Check data difference between db and fetched data
+            # db data set
+            db_urls = conn.execute(text(
+                f"SELECT url FROM {UrlBillModel.__tablename__}"
+            )).fetchall()
+            db_urls_set = {db_url[0] for db_url in db_urls[:15]}
+            # fetched data set
+            fetch_urls_set = {data["url"] for data in icd_data[:10]}
+
+            print(f"Difference: {db_urls_set.symmetric_difference(fetch_urls_set)}")
+
+            # for db_url in db_urls:
+            #     if db_url[0] in icd_urls:
+            #         print(f"Url {db_url} exists")
+            # else:
+            #     print(f"Not {db_url} exists")
+
+            # url_exists = db.query(exists().where(self.url_model.url == data["url"])).scalar()
+            # if url_exists:
+            #     print("Exists")
+            # else:
+            #     print(f"Url: {data} does not exist")
 
 
 class UrlBillable(UrlParser):
@@ -102,4 +124,19 @@ def run_url_parser(parser_name):
 
     asyncio.run(parser.add_to_db())
 
+#
+# def check_exists():
+#     url_to_check = "https://www.icd10data.com/ICD10CM/Codes/A00-B99/A50-A64/A52-/A52.10"
+#     with SessionLocal() as session:
+#         url_exists = session.query(exists().where(UrlBillModel.url == url_to_check)).scalar()
+#
+#     if url_exists:
+#         print('User exists!')
+#         print(url_exists)
+#     else:
+#         print('User does not exist.')
 
+#
+# if __name__ == "__main__":
+#     parser = UrlBillable()
+#     asyncio.run(parser.add_to_db())

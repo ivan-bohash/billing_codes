@@ -16,14 +16,19 @@ class DetailParser:
         self.url_model = url_model
         self.detail_model = detail_model
 
+    @staticmethod
+    async def exception_handler(e):
+        print(f"Exception: {e}.\nSleep 2 min before next execution.")
+        await asyncio.sleep(120)
+
     async def get_details(self, session, url):
         async with session.get(url=url, headers=self.headers) as response:
             icd_details = []
-            data_text = await response.text()
-            link_tree = html.fromstring(data_text)
+            response_html = await response.text()
+            tree = html.fromstring(response_html)
 
-            icd_code = link_tree.xpath('//div[@class="headingContainer"]//span[@class="identifierDetail"]/text()')[0]
-            description_data = link_tree.xpath('//ul/li[span[@class="identifier"]]/text()')
+            icd_code = tree.xpath('//div[@class="headingContainer"]//span[@class="identifierDetail"]/text()')[0]
+            description_data = tree.xpath('//ul/li[span[@class="identifier"]]/text()')
             description_detail = ' '.join(description_data)
             detail = re.sub(r'\s+', ' ', description_detail).strip()
 
@@ -41,45 +46,49 @@ class DetailParser:
             return list(itertools.chain(*result))
 
     async def main(self, urls, step=100):
+        start = 0
         result = []
-        count = 0
 
-        for i in range(0, len(urls), step):
-            details_step = list(urls[i:i + step])
-            result_nested = await self.run_all(details_step)
-            result.append(result_nested)
+        while start < len(urls):
+            try:
+                end = min(start + step, len(urls))
+                details_step_slice = list(urls[start:end])
+                result_nested = await self.run_all(details_step_slice)
+                result.append(result_nested)
+                start += step
 
-            if i + step < len(urls):
-                print(f"{i + 100}/{len(urls)} sleep 30 sec.")
-                count += 1
+                print(f"Sleep 30 sec ({start}/{len(urls)})")
                 await asyncio.sleep(30)
-
-            if count == 10:
-                print("Sleep extra 60 sec.")
-                count = 0
-                await asyncio.sleep(60)
+            except Exception as e:
+                await self.exception_handler(e=e)
 
         return list(itertools.chain(*result))
 
-    async def add_to_db(self, db=next(get_db())):
+    async def add_to_db(self, db=next(get_db()), step=1000):
         with db.connection() as conn:
             db_data = conn.execute(
                 text(f"SELECT url FROM {self.url_model.__tablename__}")
             ).fetchall()
-
             urls = [url[0] for url in db_data]
-            print(f"Hello form DETAILS: len {len(urls)}")
+            start = 0
 
-            # icd_data = await self.main(urls=urls)
-            # db_data = [
-            #     self.detail_model(icd_code=data["icd_code"], detail=data["detail"])
-            #     for data in icd_data
-            # ]
-            #
-            # db.add_all(db_data)
-            # db.commit()
-            # print(f"Added: {len(urls)} items")
-            # print("Done")
+            while start < len(urls):
+                try:
+                    end = min(start + step, len(urls))
+                    urls_step_slice = urls[start:end]
+                    icd_data = await self.main(urls=urls_step_slice)
+                    db_data = [
+                        self.detail_model(icd_code=data["icd_code"], detail=data["detail"])
+                        for data in icd_data
+                    ]
+                    db.add_all(db_data)
+                    db.commit()
+                    start += step
+                    print(f"Added {end}/{len(urls)} urls. Sleep 30 sec")
+                    await asyncio.sleep(30)
+
+                except Exception as e:
+                    await self.exception_handler(e=e)
 
 
 class DetailBillable(DetailParser):
@@ -107,3 +116,4 @@ def run_detail_parser(parser_name):
         raise ValueError("Unknown parser")
 
     asyncio.run(parser.add_to_db())
+

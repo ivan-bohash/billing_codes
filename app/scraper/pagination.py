@@ -55,3 +55,4 @@ def run_pagination_parser(parser_name):
         raise ValueError("Unknown parser")
 
     parser.add_to_db()
+
