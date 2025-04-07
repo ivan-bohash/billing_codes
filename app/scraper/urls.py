@@ -1,10 +1,9 @@
-from sqlalchemy import text
 import asyncio
 import aiohttp
 from lxml import html
 import itertools
 from app.config import settings
-from app.db.init_db import get_db
+from app.db.init_db import SessionLocal
 from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
 from app.db.models.url import UrlBillModel, UrlNonBillModel
 
@@ -22,7 +21,7 @@ class UrlParser:
             tree = html.fromstring(response_html)
 
             icd_hrefs = tree.xpath(
-                '//ul[following-sibling::div[@class="proper-ad-unit"]]//a[@class="identifier"]/@href'
+                '//ul[following-sibling::div[@class="ad-unit"]]//a[@class="identifier"]/@href'
             )
 
             for href in icd_hrefs:
@@ -53,7 +52,7 @@ class UrlParser:
                 nested_result = await self.run_all(urls_step_slice)
                 result.append(nested_result)
                 start += step
-                print(f"{start}/{len(urls)}")
+                print(f"{min(start, len(urls))}/{len(urls)}")
 
                 if end != len(urls):
                     print(f"Sleep 30 sec")
@@ -65,21 +64,17 @@ class UrlParser:
 
         return list(itertools.chain(*result))
 
-    async def add_to_db(self, db=next(get_db())):
-        with db.connection() as conn:
-            db_data = conn.execute(text(
-                f"SELECT url FROM {self.pagination_model.__tablename__}"
-            )).fetchall()
-            urls = [url[0] for url in db_data]
+    async def add_to_db(self):
+        with SessionLocal() as session:
+            db_data = session.query(self.pagination_model).all()
+            urls = [data.url for data in db_data]
             icd_data = await self.main(urls=urls)
-
             db_data = [
                 self.url_model(icd_code=data["icd_code"], url=data["url"])
                 for data in icd_data
             ]
-
-            db.add_all(db_data)
-            db.commit()
+            session.add_all(db_data)
+            session.commit()
             print(f"Done. Added: {len(urls)} items.")
 
 
@@ -108,3 +103,5 @@ def run_url_parser(parser_name):
         raise ValueError("Unknown parser")
 
     asyncio.run(parser.add_to_db())
+
+

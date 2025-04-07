@@ -1,11 +1,10 @@
 import aiohttp
 import asyncio
 from lxml import html
-from sqlalchemy import text
 import itertools
 import re
 from app.config import settings
-from app.db.init_db import get_db
+from app.db.init_db import SessionLocal
 from app.db.models.detail import DetailBillModel, DetailNonBillModel
 from app.db.models.url import UrlBillModel, UrlNonBillModel
 
@@ -57,32 +56,33 @@ class DetailParser:
                 result.append(result_nested)
                 start += step
 
-                print(f"Sleep 30 sec ({start}/{len(urls)})")
-                await asyncio.sleep(30)
+                if end != len(urls):
+                    print(f"Sleep 30 sec ({min(start, len(urls))}/{len(urls)})")
+                    await asyncio.sleep(30)
             except Exception as e:
                 await self.exception_handler(e=e)
 
         return list(itertools.chain(*result))
 
-    async def add_to_db(self, db=next(get_db()), step=1000):
-        with db.connection() as conn:
-            db_data = conn.execute(
-                text(f"SELECT url FROM {self.url_model.__tablename__}")
-            ).fetchall()
-            urls = [url[0] for url in db_data]
+    async def add_to_db(self, step=2000):
+        with SessionLocal() as session:
+            db_data = session.query(self.url_model).all()
+            urls = [data.url for data in db_data]
+            print(urls)
             start = 0
 
             while start < len(urls):
                 try:
                     end = min(start + step, len(urls))
                     urls_step_slice = urls[start:end]
+                    print(urls_step_slice)
                     icd_data = await self.main(urls=urls_step_slice)
                     db_data = [
                         self.detail_model(icd_code=data["icd_code"], detail=data["detail"])
                         for data in icd_data
                     ]
-                    db.add_all(db_data)
-                    db.commit()
+                    session.add_all(db_data)
+                    session.commit()
                     start += step
                     print(f"Added {end}/{len(urls)} urls. Sleep 30 sec")
                     await asyncio.sleep(30)
@@ -116,4 +116,5 @@ def run_detail_parser(parser_name):
         raise ValueError("Unknown parser")
 
     asyncio.run(parser.add_to_db())
+
 

@@ -11,4 +11,5 @@ class MainMixin:
     """
 
     id = Column(Integer(), doc="ID", primary_key=True)
-    create_at = Column(ArrowType(), doc="Create At", default=arrow.utcnow(), nullable=False)
+    created_at = Column(ArrowType(), doc="Created At", default=arrow.utcnow(), nullable=False)
+    updated_at = Column(ArrowType(), doc="Updated At", default=arrow.utcnow(), nullable=False)

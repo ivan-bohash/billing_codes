@@ -22,11 +22,11 @@ class PaginationParser:
         return urls
 
     def add_to_db(self):
-        with SessionLocal() as db:
+        with SessionLocal() as session:
             urls = self.extract_pagination_urls()
             db_data = [self.pagination_model(url=url) for url in urls]
-            db.add_all(db_data)
-            db.commit()
+            session.add_all(db_data)
+            session.commit()
             print(f"Done {self.pagination_model} {len(db_data)}")
 
 
@@ -55,4 +55,3 @@ def run_pagination_parser(parser_name):
         raise ValueError("Unknown parser")
 
     parser.add_to_db()
-

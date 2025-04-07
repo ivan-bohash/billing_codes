@@ -1,14 +1,5 @@
-from app.run import RQWorker, PeriodicTask
-from app.periodic_tasks.jobs import rq_jobs, scheduler_jobs
-
-
-def run_rq():
-    runner = RQWorker()
-
-    for job in rq_jobs:
-        runner.add_task(job=job)
-
-    runner.run()
+from app.run import PeriodicTask
+from app.periodic_tasks.jobs import scheduler_jobs
 
 
 def run_scheduler():
@@ -21,5 +12,5 @@ def run_scheduler():
 
 
 if __name__ == "__main__":
-    run_rq()
+    run_scheduler()
 

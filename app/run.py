@@ -4,23 +4,6 @@ from app.config import settings
 from app.extensions.rq_ext.redis_worker import RedisWorker
 
 
-class RQWorker(RedisWorker):
-    def __init__(self):
-        super().__init__()
-        self.queue_names = list(settings.redis["queue_name"].keys())
-        self.queue = Queue("low", connection=self.connection)
-        self.worker = Worker(
-            queues=self.queue_names,
-            connection=self.connection,
-        )
-
-    def run(self):
-        for job in self.jobs:
-            self.queue.enqueue(job["func"], job["params"])
-
-        self.worker.work()
-
-
 class PeriodicTask(RedisWorker):
     def __init__(self):
         super().__init__()
@@ -45,7 +28,8 @@ class PeriodicTask(RedisWorker):
                 args=job["args"],
                 depends_on=depends_on,
                 queue_name=self.queue_name,
-                timeout=600
+                timeout=50000
             )
 
             jod_ids[job_name] = scheduled_job.id
+
