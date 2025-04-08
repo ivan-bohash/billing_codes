@@ -68,14 +68,12 @@ class DetailParser:
         with SessionLocal() as session:
             db_data = session.query(self.url_model).all()
             urls = [data.url for data in db_data]
-            print(urls)
             start = 0
 
             while start < len(urls):
                 try:
                     end = min(start + step, len(urls))
                     urls_step_slice = urls[start:end]
-                    print(urls_step_slice)
                     icd_data = await self.main(urls=urls_step_slice)
                     db_data = [
                         self.detail_model(icd_code=data["icd_code"], detail=data["detail"])

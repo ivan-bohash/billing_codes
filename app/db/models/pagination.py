@@ -9,7 +9,12 @@ class PaginationBillModel(Base, MainMixin):
     url = Column(String)
 
     def __repr__(self):
-        return f"PaginationModel({self.url})"
+        return self._repr(
+            id=self.id,
+            url=self.url,
+            created_at=self.created_at,
+            updated_at=self.updated_at
+        )
 
     def __init__(self, url):
         self.url = url
@@ -21,7 +26,12 @@ class PaginationNonBillModel(Base, MainMixin):
     url = Column(String)
 
     def __repr__(self):
-        return f"PaginationModel({self.url})"
+        return self._repr(
+            id=self.id,
+            url=self.url,
+            created_at=self.created_at,
+            updated_at=self.updated_at
+        )
 
     def __init__(self, url):
         self.url = url

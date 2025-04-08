@@ -28,7 +28,7 @@ class PeriodicTask(RedisWorker):
                 args=job["args"],
                 depends_on=depends_on,
                 queue_name=self.queue_name,
-                timeout=50000
+                timeout=60000
             )
 
             jod_ids[job_name] = scheduled_job.id

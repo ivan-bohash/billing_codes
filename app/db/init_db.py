@@ -1,8 +1,13 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
+
 db_path = "sqlite:////home/ivan/Projects/icd_codes/data/icd_codes.db"
-engine = create_engine(db_path, connect_args={"check_same_thread": False})
+
+engine = create_engine(
+    db_path,
+    connect_args={"check_same_thread": False},
+)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

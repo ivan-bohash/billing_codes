@@ -16,6 +16,8 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
+
+from app.db.models import pagination, url, detail
 from app.db.init_db import Base
 target_metadata = Base.metadata
 # target_metadata = None

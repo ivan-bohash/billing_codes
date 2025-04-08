@@ -10,7 +10,13 @@ class DetailBillModel(Base, MainMixin):
     detail = Column(String, nullable=False)
 
     def __repr__(self):
-        return f"IcdDetail(id={self.id}, code={self.icd_code}, detail={self.detail})"
+        return self._repr(
+            id=self.id,
+            icd_code=self.icd_code,
+            detail=self.detail,
+            created_at=self.created_at,
+            updated_at=self.updated_at
+        )
 
     def __init__(self, icd_code, detail):
         self.icd_code = icd_code
@@ -24,7 +30,13 @@ class DetailNonBillModel(Base, MainMixin):
     detail = Column(String, nullable=False)
 
     def __repr__(self):
-        return f"IcdDetail(id={self.id}, code={self.icd_code}, detail={self.detail})"
+        return self._repr(
+            id=self.id,
+            icd_code=self.icd_code,
+            detail=self.detail,
+            created_at=self.created_at,
+            updated_at=self.updated_at
+        )
 
     def __init__(self, icd_code, detail):
         self.icd_code = icd_code

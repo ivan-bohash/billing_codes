@@ -10,7 +10,13 @@ class UrlBillModel(Base, MainMixin):
     url = Column(String, nullable=False)
 
     def __repr__(self):
-        return f"UrlModel(id={self.id}, code={self.icd_code}, url={self.url})"
+        return self._repr(
+            id=self.id,
+            icd_code=self.icd_code,
+            url=self.url,
+            created_at=self.created_at,
+            updated_at=self.updated_at
+        )
 
     def __init__(self, icd_code, url):
         self.icd_code = icd_code
@@ -24,7 +30,13 @@ class UrlNonBillModel(Base, MainMixin):
     url = Column(String, nullable=False)
 
     def __repr__(self):
-        return f"UrlModel(id={self.id}, code={self.icd_code}, url={self.url})"
+        return self._repr(
+            id=self.id,
+            icd_code=self.icd_code,
+            url=self.url,
+            created_at=self.created_at,
+            updated_at=self.updated_at
+        )
 
     def __init__(self, icd_code, url):
         self.icd_code = icd_code
