@@ -1,19 +1,21 @@
 import asyncio
 import aiohttp
-import arrow
 from lxml import html
 import itertools
 from app.config import settings
 from app.db.init_db import SessionLocal
 from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
-from app.db.models.url import UrlBillModel, UrlNonBillModel
+from app.db.models.url import UrlsBillModel, UrlsNonBillModel
+from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
+from app.extensions.sqlalchemy.icd_manager import ICDManager
 
 
 class UrlParser:
-    def __init__(self, pagination_model, url_model):
+    def __init__(self, pagination_model, urls_model, details_model):
         self.headers = settings.headers
         self.pagination_model = pagination_model
-        self.url_model = url_model
+        self.urls_model = urls_model
+        self.details_model = details_model
 
     async def get_icd_urls(self, session, url):
         async with session.get(url=url, headers=self.headers) as response:
@@ -65,66 +67,53 @@ class UrlParser:
 
         return list(itertools.chain(*result))
 
-    def icd_update(self, session, model, fetch_data):
-        batch_size = 1000
-        updated_at = arrow.utcnow()
-
-        for i in range(0, len(fetch_data), batch_size):
-            batch = fetch_data[i:i + batch_size]
-            codes = [data["icd_code"] for data in batch]
-
-            session.query(model).filter(model.icd_code.in_(codes)).update(
-                {model.updated_at: updated_at},
-                synchronize_session=False
-            )
-
-        session.commit()
-
     async def add_to_db(self):
         with SessionLocal() as session:
-            db_data = session.query(self.pagination_model).all()
-            urls = [data.url for data in db_data]
+            pagination_data = session.query(self.pagination_model).all()
+            urls = [data.url for data in pagination_data]
             icd_data = await self.main(urls=urls)
 
-            # updated_at method
-            # self.icd_update(session=session, model=self.url_model, fetch_data=icd_data)
 
-            # add new data to db
-            db_data = [
-                self.url_model(icd_code=data["icd_code"], url=data["url"])
-                for data in icd_data
-            ]
-            session.add_all(db_data)
-            session.commit()
-            print(f"Done. Added: {len(urls)} items.")
+            # icd_data = [
+            #     {'icd_code': 'ZXC00', 'url': 'https://www.icd10data.com/ICD10CM/Codes/A00-B99/A00-A09/A00-/A00'},
+            #     {'icd_code': 'ZXC01', 'url': 'https://www.icd10data.com/ICD10CM/Codes/A00-B99/A00-A09/A00-/A00'}
+            # ]
+            # for data in icd_data:
+            #     icd = self.urls_model(icd_code=data["icd_code"], url=data["url"])
+            #     session.add(icd)
+            # session.commit()
 
 
-class UrlBillable(UrlParser):
+            icd_manager = ICDManager(
+                session=session, urls_model=self.urls_model, details_model=self.details_model, fetch_data=icd_data
+            )
+            icd_manager.run()
+
+
+class UrlsBillable(UrlParser):
     def __init__(self):
         super().__init__(
             pagination_model=PaginationBillModel,
-            url_model=UrlBillModel
+            urls_model=UrlsBillModel,
+            details_model=DetailsBillModel,
         )
 
 
-class UrlNonBillable(UrlParser):
+class UrlsNonBillable(UrlParser):
     def __init__(self):
         super().__init__(
             pagination_model=PaginationNonBillModel,
-            url_model=UrlNonBillModel
+            urls_model=UrlsNonBillModel,
+            details_model=DetailsNonBillModel
         )
 
 
-def run_url_parser(parser_name):
+def run_urls_parser(parser_name):
     if parser_name == "billable":
-        parser = UrlBillable()
+        parser = UrlsBillable()
     elif parser_name == "non_billable":
-        parser = UrlNonBillable()
+        parser = UrlsNonBillable()
     else:
         raise ValueError("Unknown parser")
 
     asyncio.run(parser.add_to_db())
-
-# if __name__ == "__main__":
-#     parser = UrlNonBillable()
-#     asyncio.run(parser.add_to_db())

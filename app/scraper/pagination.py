@@ -5,6 +5,7 @@ from app.config import settings
 from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
 
 
+
 class PaginationParser:
     def __init__(self, base_url, pagination_model):
         self.headers = settings.headers
@@ -55,4 +56,3 @@ def run_pagination_parser(parser_name):
         raise ValueError("Unknown parser")
 
     parser.add_to_db()
-

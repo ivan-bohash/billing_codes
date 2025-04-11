@@ -5,15 +5,15 @@ import itertools
 import re
 from app.config import settings
 from app.db.init_db import SessionLocal
-from app.db.models.detail import DetailBillModel, DetailNonBillModel
-from app.db.models.url import UrlBillModel, UrlNonBillModel
+from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
+from app.db.models.url import UrlsBillModel, UrlsNonBillModel
 
 
 class DetailParser:
-    def __init__(self, url_model, detail_model):
+    def __init__(self, urls_model, details_model):
         self.headers = settings.headers
-        self.url_model = url_model
-        self.detail_model = detail_model
+        self.urls_model = urls_model
+        self.details_model = details_model
 
     @staticmethod
     async def exception_handler(e):
@@ -64,55 +64,48 @@ class DetailParser:
 
         return list(itertools.chain(*result))
 
-    async def add_to_db(self, step=2000):
+    async def add_to_db(self):
         with SessionLocal() as session:
-            db_data = session.query(self.url_model).all()
-            urls = [data.url for data in db_data]
-            start = 0
-
-            while start < len(urls):
-                try:
-                    end = min(start + step, len(urls))
-                    urls_step_slice = urls[start:end]
-                    icd_data = await self.main(urls=urls_step_slice)
-                    db_data = [
-                        self.detail_model(icd_code=data["icd_code"], detail=data["detail"])
-                        for data in icd_data
-                    ]
-                    session.add_all(db_data)
-                    session.commit()
-                    start += step
-                    print(f"Added {end}/{len(urls)} urls. Sleep 30 sec")
-                    await asyncio.sleep(30)
-
-                except Exception as e:
-                    await self.exception_handler(e=e)
+            # add new
+            db_data = session.query(self.urls_model).filter(
+                self.urls_model.created_at == self.urls_model.updated_at
+            )
+            if db_data:
+                urls = [data.url for data in db_data]
+                icd_data = await self.main(urls=urls)
+                db_data = [
+                    self.details_model(icd_code=data["icd_code"], detail=data["detail"])
+                    for data in icd_data
+                ]
+                session.add_all(db_data)
+                session.commit()
 
 
-class DetailBillable(DetailParser):
+class DetailsBillable(DetailParser):
     def __init__(self):
         super().__init__(
-            url_model=UrlBillModel,
-            detail_model=DetailBillModel
+            urls_model=UrlsBillModel,
+            details_model=DetailsBillModel
         )
 
 
-class DetailNonBillable(DetailParser):
+class DetailsNonBillable(DetailParser):
     def __init__(self):
         super().__init__(
-            url_model=UrlNonBillModel,
-            detail_model=DetailNonBillModel
+            urls_model=UrlsNonBillModel,
+            details_model=DetailsNonBillModel
         )
 
 
-def run_detail_parser(parser_name):
+def run_details_parser(parser_name):
     if parser_name == "billable":
-        parser = DetailBillable()
+        parser = DetailsBillable()
     elif parser_name == "non_billable":
-        parser = DetailNonBillable()
+        parser = DetailsNonBillable()
     else:
         raise ValueError("Unknown parser")
 
     asyncio.run(parser.add_to_db())
+
 
 
