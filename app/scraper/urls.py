@@ -73,17 +73,6 @@ class UrlParser:
             urls = [data.url for data in pagination_data]
             icd_data = await self.main(urls=urls)
 
-
-            # icd_data = [
-            #     {'icd_code': 'ZXC00', 'url': 'https://www.icd10data.com/ICD10CM/Codes/A00-B99/A00-A09/A00-/A00'},
-            #     {'icd_code': 'ZXC01', 'url': 'https://www.icd10data.com/ICD10CM/Codes/A00-B99/A00-A09/A00-/A00'}
-            # ]
-            # for data in icd_data:
-            #     icd = self.urls_model(icd_code=data["icd_code"], url=data["url"])
-            #     session.add(icd)
-            # session.commit()
-
-
             icd_manager = ICDManager(
                 session=session, urls_model=self.urls_model, details_model=self.details_model, fetch_data=icd_data
             )
