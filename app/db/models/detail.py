@@ -1,10 +1,10 @@
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, Integer
 from app.db.init_db import Base
 from app.db.models.abstract import MainMixin
 
 
-class DetailBillModel(Base, MainMixin):
-    __tablename__ = "detail_billable"
+class DetailsBillModel(Base, MainMixin):
+    __tablename__ = "details_billable"
 
     icd_code = Column(String, index=True, nullable=False)
     detail = Column(String, nullable=False)
@@ -23,8 +23,8 @@ class DetailBillModel(Base, MainMixin):
         self.detail = detail
 
 
-class DetailNonBillModel(Base, MainMixin):
-    __tablename__ = "detail_non_billable"
+class DetailsNonBillModel(Base, MainMixin):
+    __tablename__ = "details_non_billable"
 
     icd_code = Column(String, index=True, nullable=False)
     detail = Column(String, nullable=False)

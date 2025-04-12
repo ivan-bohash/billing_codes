@@ -2,9 +2,11 @@ from sqlalchemy import Column, String
 from app.db.init_db import Base
 from app.db.models.abstract import MainMixin
 
+from sqlalchemy import Column, Integer
 
-class UrlBillModel(Base, MainMixin):
-    __tablename__ = "url_billable"
+
+class UrlsBillModel(Base, MainMixin):
+    __tablename__ = "urls_billable"
 
     icd_code = Column(String, index=True, nullable=False)
     url = Column(String, nullable=False)
@@ -23,8 +25,8 @@ class UrlBillModel(Base, MainMixin):
         self.url = url
 
 
-class UrlNonBillModel(Base, MainMixin):
-    __tablename__ = "url_non_billable"
+class UrlsNonBillModel(Base, MainMixin):
+    __tablename__ = "urls_non_billable"
 
     icd_code = Column(String, index=True, nullable=False)
     url = Column(String, nullable=False)

@@ -7,7 +7,7 @@ from app.db.init_db import SessionLocal
 from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
 from app.db.models.url import UrlsBillModel, UrlsNonBillModel
 from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
-from app.extensions.sqlalchemy.icd_manager import ICDManager
+from app.extensions.sqlalchemy.urls_manager import UrlsManager
 
 
 class UrlParser:
@@ -73,8 +73,11 @@ class UrlParser:
             urls = [data.url for data in pagination_data]
             icd_data = await self.main(urls=urls)
 
-            icd_manager = ICDManager(
-                session=session, urls_model=self.urls_model, details_model=self.details_model, fetch_data=icd_data
+            icd_manager = UrlsManager(
+                session=session,
+                urls_model=self.urls_model,
+                details_model=self.details_model,
+                fetch_data=icd_data
             )
             icd_manager.run()
 

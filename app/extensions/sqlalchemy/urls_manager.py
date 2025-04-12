@@ -1,7 +1,7 @@
 import arrow
 
 
-class ICDManager:
+class UrlsManager:
     def __init__(self, session, urls_model, details_model, fetch_data):
         self.session = session
         self.urls_model = urls_model
@@ -19,12 +19,8 @@ class ICDManager:
                 new_icd_codes.append(icd)
 
         if new_icd_codes:
-            print(new_icd_codes)
             self.session.add_all(new_icd_codes)
-            print("Added")
             self.session.commit()
-        else:
-            return None
 
     def update_icd(self):
         batch_size = 1000
@@ -35,10 +31,9 @@ class ICDManager:
                 codes = [data["icd_code"] for data in batch]
 
                 self.session.query(self.urls_model).filter(self.urls_model.icd_code.in_(codes)).update(
-                    {self.urls_model.updated_at: self.updated_at},
-                    synchronize_session=False
+                    {self.urls_model.updated_at: self.updated_at}
                 )
-            print("Updated")
+            print("Urls updated")
             self.session.commit()
 
         except Exception as e:
@@ -62,11 +57,8 @@ class ICDManager:
 
             self.session.commit()
             print("Deleted")
-        else:
-            return None
 
     def run(self):
-        self.update_icd()
         self.add_icd()
+        self.update_icd()
         self.delete_icd()
-

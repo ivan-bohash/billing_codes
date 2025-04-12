@@ -1,3 +1,4 @@
+import arrow
 import aiohttp
 import asyncio
 from lxml import html
@@ -7,6 +8,7 @@ from app.config import settings
 from app.db.init_db import SessionLocal
 from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
 from app.db.models.url import UrlsBillModel, UrlsNonBillModel
+from app.extensions.sqlalchemy.details_manager import DetailsManager
 
 
 class DetailParser:
@@ -44,7 +46,7 @@ class DetailParser:
             result = await asyncio.gather(*tasks)
             return list(itertools.chain(*result))
 
-    async def main(self, urls, step=100):
+    async def main(self, urls=None, step=100):
         start = 0
         result = []
 
@@ -66,19 +68,14 @@ class DetailParser:
 
     async def add_to_db(self):
         with SessionLocal() as session:
-            # add new
-            db_data = session.query(self.urls_model).filter(
-                self.urls_model.created_at == self.urls_model.updated_at
+            details_manager = DetailsManager(
+                session=session,
+                urls_model=self.urls_model,
+                details_model=self.details_model,
+                fetch_method=self.main
             )
-            if db_data:
-                urls = [data.url for data in db_data]
-                icd_data = await self.main(urls=urls)
-                db_data = [
-                    self.details_model(icd_code=data["icd_code"], detail=data["detail"])
-                    for data in icd_data
-                ]
-                session.add_all(db_data)
-                session.commit()
+
+            await details_manager.run()
 
 
 class DetailsBillable(DetailParser):
@@ -106,6 +103,3 @@ def run_details_parser(parser_name):
         raise ValueError("Unknown parser")
 
     asyncio.run(parser.add_to_db())
-
-
-

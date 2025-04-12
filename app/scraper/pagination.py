@@ -3,7 +3,7 @@ from lxml import html
 from app.db.init_db import SessionLocal
 from app.config import settings
 from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
-
+from app.extensions.sqlalchemy.pagination_manager import PaginationManager
 
 
 class PaginationParser:
@@ -25,10 +25,8 @@ class PaginationParser:
     def add_to_db(self):
         with SessionLocal() as session:
             urls = self.extract_pagination_urls()
-            db_data = [self.pagination_model(url=url) for url in urls]
-            session.add_all(db_data)
-            session.commit()
-            print(f"Done {self.pagination_model} {len(db_data)}")
+            pagination_manager = PaginationManager(session=session, model=self.pagination_model, fetch_data=urls)
+            pagination_manager.run()
 
 
 class PaginationBillable(PaginationParser):
@@ -56,3 +54,5 @@ def run_pagination_parser(parser_name):
         raise ValueError("Unknown parser")
 
     parser.add_to_db()
+
+
