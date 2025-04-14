@@ -21,42 +21,41 @@ class UrlsManager:
         if new_icd_codes:
             self.session.add_all(new_icd_codes)
             self.session.commit()
+            print(f"Added {len(new_icd_codes)} urls")
 
     def update_icd(self):
-        batch_size = 1000
+        mapping = []
+        db_data = {
+            url.icd_code: url.id
+            for url in self.session.query(self.urls_model).all()
+        }
 
-        try:
-            for i in range(0, len(self.fetch_data), batch_size):
-                batch = self.fetch_data[i:i + batch_size]
-                codes = [data["icd_code"] for data in batch]
+        for icd in self.fetch_data:
+            url_id = db_data.get(icd["icd_code"])
+            mapping.append({
+                "id": url_id,
+                "updated_at": self.updated_at
+            })
 
-                self.session.query(self.urls_model).filter(self.urls_model.icd_code.in_(codes)).update(
-                    {self.urls_model.updated_at: self.updated_at}
-                )
-            print("Urls updated")
-            self.session.commit()
+        self.session.bulk_update_mappings(self.urls_model, mapping)
+        self.session.commit()
 
-        except Exception as e:
-            print(e)
+        print(f"Updated {len(mapping)} items")
 
     def delete_icd(self):
-        removed_icd = self.session.query(self.urls_model).filter(self.urls_model.updated_at != self.updated_at).all()
+        urls_to_delete = self.session.query(self.urls_model).filter(self.urls_model.updated_at != self.updated_at).all()
 
-        if removed_icd:
-            # delete from urls table
-            for icd in removed_icd:
-                self.session.delete(icd)
+        if urls_to_delete:
+            for url in urls_to_delete:
+                self.session.delete(url)
 
-            # delete form details table
-            removed_icd_codes = [icd.icd_code for icd in removed_icd]
-            icd_to_delete = self.session.query(self.details_model).filter(self.details_model.icd_code.in_(
-                removed_icd_codes)).all()
-
-            for icd in icd_to_delete:
-                self.session.delete(icd)
+            urls_id = [url.id for url in urls_to_delete]
+            for url_id in urls_id:
+                detail = self.session.query(self.details_model).filter(self.details_model.id == url_id).one_or_none()
+                self.session.delete(detail)
 
             self.session.commit()
-            print("Deleted")
+            print(f"Deleted {len(urls_to_delete)} items")
 
     def run(self):
         self.add_icd()

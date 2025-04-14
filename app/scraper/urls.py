@@ -1,23 +1,22 @@
 import asyncio
-import aiohttp
 from lxml import html
-import itertools
 from app.config import settings
 from app.db.init_db import SessionLocal
 from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
 from app.db.models.url import UrlsBillModel, UrlsNonBillModel
 from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
 from app.extensions.sqlalchemy.urls_manager import UrlsManager
+from app.scraper.icd_mixin import ICDMixin
 
 
-class UrlParser:
+class UrlParser(ICDMixin):
     def __init__(self, pagination_model, urls_model, details_model):
         self.headers = settings.headers
         self.pagination_model = pagination_model
         self.urls_model = urls_model
         self.details_model = details_model
 
-    async def get_icd_urls(self, session, url):
+    async def get_icd_data(self, session, url):
         async with session.get(url=url, headers=self.headers) as response:
             base_urls = []
             response_html = await response.text()
@@ -34,38 +33,6 @@ class UrlParser:
                 })
 
         return base_urls
-
-    async def get_all(self, session, url):
-        return await self.get_icd_urls(session=session, url=url)
-
-    async def run_all(self, session, urls):
-        tasks = [self.get_all(session, url) for url in urls]
-        result = await asyncio.gather(*tasks)
-        return list(itertools.chain(*result))
-
-    async def main(self, urls, step=100):
-        result = []
-        start = 0
-
-        async with aiohttp.ClientSession() as session:
-            while start < len(urls):
-                try:
-                    end = min(start + step, len(urls))
-                    urls_step_slice = urls[start:end]
-                    nested_result = await self.run_all(session=session, urls=urls_step_slice)
-                    result.append(nested_result)
-                    start += step
-                    print(f"{min(start, len(urls))}/{len(urls)}")
-
-                    if end != len(urls):
-                        print(f"Sleep 30 sec")
-                        await asyncio.sleep(30)
-
-                except Exception as e:
-                    print(f"Exception: {e}.\nSleep 2 min before next execution.")
-                    await asyncio.sleep(120)
-
-        return list(itertools.chain(*result))
 
     async def add_to_db(self):
         with SessionLocal() as session:

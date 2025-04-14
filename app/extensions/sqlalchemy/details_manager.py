@@ -11,11 +11,10 @@ class DetailsManager:
 
     async def add_details(self):
         db_data = self.session.query(self.urls_model).filter(
-                    self.urls_model.created_at == self.urls_model.updated_at
-                ).all()
+            self.urls_model.created_at == self.urls_model.updated_at
+        ).all()
 
         if db_data:
-            print("db_data:", db_data)
             urls = [data.url for data in db_data]
             icd_data = await self.fetch_method(urls=urls)
 
@@ -25,15 +24,17 @@ class DetailsManager:
             ]
             self.session.add_all(db_data)
             self.session.commit()
+            print(f"Added {len(db_data)} details")
 
     def update_details(self):
-        updated_at = arrow.utcnow()
-        self.session.query(self.details_model).update(
-            {self.details_model.updated_at: updated_at}
-        )
+        data = [
+            {"id": detail.id, "updated_at": self.updated_at}
+            for detail in self.session.query(self.details_model).all()
+        ]
 
+        self.session.bulk_update_mappings(self.details_model, data)
         self.session.commit()
-        print("Details updated")
+        print(f"Updated {len(data)} details")
 
     async def run(self):
         await self.add_details()
