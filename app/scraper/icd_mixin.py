@@ -1,6 +1,6 @@
 import asyncio
-import itertools
 import aiohttp
+import itertools
 
 
 class ICDMixin:

@@ -2,7 +2,7 @@ from app.scraper.pagination import run_pagination_parser
 from app.scraper.urls import run_urls_parser
 from app.scraper.details import run_details_parser
 
-cron_string = "27 21 * * *"
+cron_string = "* * * * *"
 
 scheduler_jobs = [
     # Billable data
