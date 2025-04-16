@@ -43,7 +43,8 @@ class UrlsManager:
         print(f"Updated {len(mapping)} items")
 
     def delete_icd(self):
-        urls_to_delete = self.session.query(self.urls_model).filter(self.urls_model.updated_at != self.updated_at).all()
+        urls_to_delete = (self.session.query(self.urls_model).
+                          filter(self.urls_model.updated_at != self.updated_at).all())
 
         if urls_to_delete:
             for url in urls_to_delete:

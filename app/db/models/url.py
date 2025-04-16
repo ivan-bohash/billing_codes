@@ -1,8 +1,6 @@
-from sqlalchemy import Column, String
+from sqlalchemy import String, Column
 from app.db.init_db import Base
 from app.db.models.abstract import MainMixin
-
-from sqlalchemy import Column, Integer
 
 
 class UrlsBillModel(Base, MainMixin):
@@ -43,5 +41,3 @@ class UrlsNonBillModel(Base, MainMixin):
     def __init__(self, icd_code, url):
         self.icd_code = icd_code
         self.url = url
-
-

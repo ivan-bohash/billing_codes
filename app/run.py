@@ -1,4 +1,4 @@
-from rq import Queue, Worker
+from rq import Queue
 from rq_scheduler import Scheduler
 from app.config import settings
 from app.extensions.rq_ext.redis_worker import RedisWorker
@@ -28,7 +28,7 @@ class PeriodicTask(RedisWorker):
                 args=job["args"],
                 depends_on=depends_on,
                 queue_name=self.queue_name,
-                timeout=18000
+                timeout=43200
             )
 
             jod_ids[job_name] = scheduled_job.id
