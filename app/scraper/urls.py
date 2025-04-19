@@ -6,19 +6,21 @@ from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
 from app.db.models.url import UrlsBillModel, UrlsNonBillModel
 from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
 from app.extensions.sqlalchemy.urls_manager import UrlsManager
-from app.scraper.icd_mixin import ICDMixin
+from app.scraper.base_icd import BaseICD
 
 
-class UrlParser(ICDMixin):
-    def __init__(self, pagination_model, urls_model, details_model):
+class UrlParser(BaseICD):
+    def __init__(self, pagination_model, urls_model, opposite_urls_model, details_model):
         self.headers = settings.headers
         self.pagination_model = pagination_model
         self.urls_model = urls_model
+        self.opposite_urls_model = opposite_urls_model
         self.details_model = details_model
 
     async def get_icd_data(self, session, url):
         async with session.get(url=url, headers=self.headers) as response:
             base_urls = []
+
             response_html = await response.text()
             tree = html.fromstring(response_html)
 
@@ -34,28 +36,23 @@ class UrlParser(ICDMixin):
 
         return base_urls
 
-    async def add_to_db(self):
+    async def manage_urls(self, task):
         with SessionLocal() as session:
-            pagination_data = session.query(self.pagination_model).all()
-            urls = [data.url for data in pagination_data]
-            icd_data = await self.main(urls=urls)
-
             icd_manager = UrlsManager(
                 session=session,
+                pagination_model=self.pagination_model,
                 urls_model=self.urls_model,
+                opposite_urls_model=self.opposite_urls_model,
                 details_model=self.details_model,
-                fetch_data=icd_data
+                fetch_method=self.main
             )
-            icd_manager.run()
 
-
-class UrlsBillable(UrlParser):
-    def __init__(self):
-        super().__init__(
-            pagination_model=PaginationBillModel,
-            urls_model=UrlsBillModel,
-            details_model=DetailsBillModel,
-        )
+            if task == "update_urls":
+                await icd_manager.update_urls()
+            elif task == "delete_urls":
+                icd_manager.delete_urls()
+            else:
+                raise ValueError("Unknown task")
 
 
 class UrlsNonBillable(UrlParser):
@@ -63,16 +60,31 @@ class UrlsNonBillable(UrlParser):
         super().__init__(
             pagination_model=PaginationNonBillModel,
             urls_model=UrlsNonBillModel,
+            opposite_urls_model=UrlsBillModel,
             details_model=DetailsNonBillModel
         )
 
 
-def run_urls_parser(parser_name):
-    if parser_name == "billable":
-        parser = UrlsBillable()
-    elif parser_name == "non_billable":
-        parser = UrlsNonBillable()
-    else:
-        raise ValueError("Unknown parser")
+class UrlsBillable(UrlParser):
+    def __init__(self):
+        super().__init__(
+            pagination_model=PaginationBillModel,
+            urls_model=UrlsBillModel,
+            opposite_urls_model=UrlsNonBillModel,
+            details_model=DetailsBillModel,
+        )
 
-    asyncio.run(parser.add_to_db())
+
+def run_urls_parser(task):
+    non_billable_parser = UrlsNonBillable()
+    billable_parser = UrlsBillable()
+
+    async def run_parsers():
+        await non_billable_parser.manage_urls(task)
+        await billable_parser.manage_urls(task)
+
+    asyncio.run(run_parsers())
+
+
+
+

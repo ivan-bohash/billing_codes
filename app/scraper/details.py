@@ -6,10 +6,10 @@ from app.db.init_db import SessionLocal
 from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
 from app.db.models.url import UrlsBillModel, UrlsNonBillModel
 from app.extensions.sqlalchemy.details_manager import DetailsManager
-from app.scraper.icd_mixin import ICDMixin
+from app.scraper.base_icd import BaseICD
 
 
-class DetailParser(ICDMixin):
+class DetailParser(BaseICD):
     def __init__(self, urls_model, details_model):
         self.headers = settings.headers
         self.urls_model = urls_model
@@ -30,7 +30,7 @@ class DetailParser(ICDMixin):
 
         return icd_details
 
-    async def add_to_db(self):
+    async def manage_details(self):
         with SessionLocal() as session:
             details_manager = DetailsManager(
                 session=session,
@@ -42,14 +42,6 @@ class DetailParser(ICDMixin):
             await details_manager.run()
 
 
-class DetailsBillable(DetailParser):
-    def __init__(self):
-        super().__init__(
-            urls_model=UrlsBillModel,
-            details_model=DetailsBillModel
-        )
-
-
 class DetailsNonBillable(DetailParser):
     def __init__(self):
         super().__init__(
@@ -58,12 +50,22 @@ class DetailsNonBillable(DetailParser):
         )
 
 
-def run_details_parser(parser_name):
-    if parser_name == "billable":
-        parser = DetailsBillable()
-    elif parser_name == "non_billable":
-        parser = DetailsNonBillable()
-    else:
-        raise ValueError("Unknown parser")
+class DetailsBillable(DetailParser):
+    def __init__(self):
+        super().__init__(
+            urls_model=UrlsBillModel,
+            details_model=DetailsBillModel
+        )
 
-    asyncio.run(parser.add_to_db())
+
+def run_details_parser():
+    non_billable_parser = DetailsNonBillable()
+    billable_parser = DetailsBillable()
+
+    async def run_parsers():
+        await non_billable_parser.manage_details()
+        await billable_parser.manage_details()
+
+    asyncio.run(run_parsers())
+
+

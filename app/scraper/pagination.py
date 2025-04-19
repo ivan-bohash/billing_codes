@@ -22,19 +22,16 @@ class PaginationParser:
 
         return urls
 
-    def add_to_db(self):
+    def manage_pagination(self):
         with SessionLocal() as session:
             urls = self.extract_pagination_urls()
-            pagination_manager = PaginationManager(session=session, model=self.pagination_model, fetch_data=urls)
+            pagination_manager = PaginationManager(
+                session=session,
+                pagination_model=self.pagination_model,
+                fetch_data=urls
+            )
+
             pagination_manager.run()
-
-
-class PaginationBillable(PaginationParser):
-    def __init__(self):
-        super().__init__(
-            base_url=settings.billable_url,
-            pagination_model=PaginationBillModel
-        )
 
 
 class PaginationNonBillable(PaginationParser):
@@ -45,14 +42,19 @@ class PaginationNonBillable(PaginationParser):
         )
 
 
-def run_pagination_parser(parser_name):
-    if parser_name == "billable":
-        parser = PaginationBillable()
-    elif parser_name == "non_billable":
-        parser = PaginationNonBillable()
-    else:
-        raise ValueError("Unknown parser")
+class PaginationBillable(PaginationParser):
+    def __init__(self):
+        super().__init__(
+            base_url=settings.billable_url,
+            pagination_model=PaginationBillModel
+        )
 
-    parser.add_to_db()
+
+def run_pagination_parser():
+    non_billable_parser = PaginationNonBillable()
+    billable_parser = PaginationBillable()
+
+    non_billable_parser.manage_pagination()
+    billable_parser.manage_pagination()
 
 

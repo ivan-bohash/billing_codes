@@ -24,7 +24,7 @@ class DetailsManager:
             ]
             self.session.add_all(db_data)
             self.session.commit()
-            print(f"Added {len(db_data)} details")
+            print(f"{self.details_model.__name__}: {len(db_data)} added details")
 
     def update_details(self):
         data = [
@@ -34,7 +34,7 @@ class DetailsManager:
 
         self.session.bulk_update_mappings(self.details_model, data)
         self.session.commit()
-        print(f"Updated {len(data)} details")
+        print(f"{self.details_model.__name__}: {len(data)} updated details")
 
     async def run(self):
         await self.add_details()

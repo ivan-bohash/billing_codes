@@ -1,16 +1,24 @@
 import asyncio
-import aiohttp
 import itertools
+from abc import ABCMeta, abstractmethod
+
+import aiohttp
 
 
-class ICDMixin:
+class BaseICD(metaclass=ABCMeta):
     @staticmethod
     async def exception_handler(e):
         print(f"Exception: {e}.\nSleep 2 min before next execution.")
         await asyncio.sleep(120)
 
+    @abstractmethod
     async def get_icd_data(self, session, url):
-        pass
+        """
+
+        :param session:
+        :param url:
+        :return:
+        """
 
     async def get_all(self, session, url):
         return await self.get_icd_data(session=session, url=url)
