@@ -4,6 +4,11 @@ from app.db.models.abstract import MainMixin
 
 
 class UrlsBillModel(Base, MainMixin):
+    """
+    Urls Billable model
+
+    """
+
     __tablename__ = "urls_billable"
 
     icd_code = Column(String, index=True, nullable=False)
@@ -24,6 +29,11 @@ class UrlsBillModel(Base, MainMixin):
 
 
 class UrlsNonBillModel(Base, MainMixin):
+    """
+    Urls Non-Billable model
+
+    """
+
     __tablename__ = "urls_non_billable"
 
     icd_code = Column(String, index=True, nullable=False)

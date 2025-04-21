@@ -4,6 +4,11 @@ from app.db.models.abstract import MainMixin
 
 
 class PaginationBillModel(Base, MainMixin):
+    """
+    Pagination Billable model
+
+    """
+
     __tablename__ = "pagination_billable"
 
     url = Column(String)
@@ -21,6 +26,11 @@ class PaginationBillModel(Base, MainMixin):
 
 
 class PaginationNonBillModel(Base, MainMixin):
+    """
+    Pagination Non-Billable model
+
+    """
+
     __tablename__ = "pagination_non_billable"
 
     url = Column(String)

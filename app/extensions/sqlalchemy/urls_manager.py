@@ -2,8 +2,25 @@ import arrow
 
 
 class UrlsManager:
-    def __init__(self, session, pagination_model, urls_model, opposite_urls_model, details_model, fetch_method):
-        self.session = session
+    """
+    Manager responsible for updating existing records,
+
+    adding new urls and deleting urls with associated details in the database
+
+    """
+
+    def __init__(self, db, pagination_model, urls_model, opposite_urls_model, details_model, fetch_method):
+        """
+        :param db: current database session
+        :param pagination_model: model that stores pagination links
+        :param urls_model: model that stores urls and icd_code
+        :param opposite_urls_model: opposite model to check records
+        :param details_model: model that stores ICD detailed information
+        :param fetch_method: async method to fetch data
+
+        """
+
+        self.db = db
         self.pagination_model = pagination_model
         self.urls_model = urls_model
         self.opposite_urls_model = opposite_urls_model
@@ -12,77 +29,98 @@ class UrlsManager:
         self.updated_at = arrow.utcnow()
 
     async def update_urls(self):
-        pagination_data = self.session.query(self.pagination_model).all()
-        urls = [data.url for data in pagination_data]
+        """
+        Fetches URLs data, update or add new records
+
+        :return: None
+
+        """
+
+        # get all pagination URLs from database
+        urls = [icd.url for icd in self.db.query(self.pagination_model.url).all()]
+
+        # fetch URLs data
         fetched_data = await self.fetch_method(urls=urls)
 
         def update():
-            step = 10000
-            updated_icd = 0
+            """
+            Update field "updated_at" for records that exist in database
 
-            db_data = {
+            :return: None
+
+            """
+
+            # create dict from urls model data
+            db_urls = {
                 url.icd_code: url.id
-                for url in self.session.query(self.urls_model).all()
+                for url in self.db.query(self.urls_model).all()
             }
 
-            for i in range(0, len(fetched_data), step):
-                batch_fetched_data = fetched_data[i:i+step]
-                mapping = []
+            if db_urls:
+                # update only existing in database records
+                data = [
+                    {"id": db_urls.get(icd["icd_code"]), "updated_at": self.updated_at}
+                    for icd in fetched_data
+                ]
 
-                for icd in batch_fetched_data:
-                    url_id = db_data.get(icd["icd_code"])
+                self.db.bulk_update_mappings(self.urls_model, data)
+                self.db.commit()
 
-                    if url_id:
-                        mapping.append({
-                            "id": url_id,
-                            "updated_at": self.updated_at
-                        })
-
-                if mapping:
-                    self.session.bulk_update_mappings(self.urls_model, mapping)
-                    updated_icd += len(mapping)
-
-            self.session.commit()
-
-            print(f"{self.urls_model.__name__}: {updated_icd} updated elements")
+                print(f"{self.urls_model.__name__}: {len(data)} updated elements")
 
         def add_new():
-            icd_code_list = {data.icd_code for data in self.session.query(self.urls_model.icd_code).all()}
+            """
+            Add new records if they don't exist to the database
+
+            :return: None
+
+            """
+
+            # get all icd codes from urls model
+            db_icd_codes = {data.icd_code for data in self.db.query(self.urls_model.icd_code).all()}
             new_icd_codes = []
 
             for data in fetched_data:
-                if data["icd_code"] not in icd_code_list:
+                # add only if icd doesn't exist in database
+                if data["icd_code"] not in db_icd_codes:
                     icd = self.urls_model(icd_code=data["icd_code"], url=data["url"])
                     new_icd_codes.append(icd)
 
             if new_icd_codes:
-                self.session.add_all(new_icd_codes)
-                self.session.commit()
+                self.db.add_all(new_icd_codes)
+                self.db.commit()
                 print(f"{self.urls_model.__name__}: {len(new_icd_codes)} added elements")
 
         update()
         add_new()
 
     def delete_urls(self):
-        urls_to_delete = (self.session.query(self.urls_model).
+        """
+        Delete outdated ICD from database and remove ICD from details model
+
+        :return: None
+
+        """
+
+        # check outdated ICD exists in the opposite model
+        urls_to_delete = (self.db.query(self.urls_model).
                           filter(self.urls_model.updated_at != self.updated_at).
-                          filter(self.urls_model.icd_code.in_(self.session.query(self.opposite_urls_model.icd_code))
+                          filter(self.urls_model.icd_code.in_(self.db.query(self.opposite_urls_model.icd_code))
                                  )).all()
 
         if urls_to_delete:
             for url in urls_to_delete:
-                self.session.delete(url)
+                self.db.delete(url)
 
-            self.session.commit()
-
+            # delete ICD from details model
             urls_icd_code = [url.icd_code for url in urls_to_delete]
             for icd_code in urls_icd_code:
-                detail = (self.session.query(self.details_model).
+                detail = (self.db.query(self.details_model).
                           filter(self.details_model.icd_code == icd_code).
                           one_or_none())
 
-                self.session.delete(detail)
+                self.db.delete(detail)
 
-            self.session.commit()
+            self.db.commit()
 
             print(f"{self.urls_model.__name__}, {self.details_model.__name__}: deleted {len(urls_to_delete)} elements")

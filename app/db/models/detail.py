@@ -4,6 +4,11 @@ from app.db.models.abstract import MainMixin
 
 
 class DetailsBillModel(Base, MainMixin):
+    """
+    Details Billable model
+
+    """
+
     __tablename__ = "details_billable"
 
     icd_code = Column(String, index=True, nullable=False)
@@ -24,6 +29,11 @@ class DetailsBillModel(Base, MainMixin):
 
 
 class DetailsNonBillModel(Base, MainMixin):
+    """
+    Details Non-Billable model
+
+    """
+
     __tablename__ = "details_non_billable"
 
     icd_code = Column(String, index=True, nullable=False)
