@@ -126,5 +126,3 @@ def run_details_parser() -> None:
 
     asyncio.run(run_parsers())
 
-
-run_details_parser()
