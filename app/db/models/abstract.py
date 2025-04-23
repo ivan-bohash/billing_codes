@@ -1,8 +1,6 @@
-import arrow
-import typing
-
 from sqlalchemy import Column, Integer
 from sqlalchemy_utils import ArrowType
+import arrow
 
 
 class MainMixin:
@@ -13,9 +11,9 @@ class MainMixin:
 
     default_time = arrow.utcnow()
 
-    id = Column(Integer(), doc="ID", primary_key=True)
-    created_at = Column(ArrowType(), doc="Created At", default=default_time, nullable=False)
-    updated_at = Column(ArrowType(), doc="Updated At", default=default_time, nullable=False)
+    id = Column(Integer, doc="ID", primary_key=True)
+    created_at = Column(ArrowType, doc="Created At", default=default_time, nullable=False)
+    updated_at = Column(ArrowType, doc="Updated At", default=default_time, nullable=False)
 
     # custom repr method
     def _repr(self, **kwargs):

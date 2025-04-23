@@ -1,5 +1,6 @@
 from rq import Queue
 from rq_scheduler import Scheduler
+
 from app.config import settings
 from app.extensions.rq_ext.redis_worker import RedisWorker
 

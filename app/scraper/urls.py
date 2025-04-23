@@ -1,12 +1,15 @@
 import asyncio
 from lxml import html
+
 from app.config import settings
+from app.scraper.base_icd import BaseICD
 from app.db.init_db import SessionLocal
+from app.extensions.sqlalchemy.urls_manager import UrlsManager
+
 from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
 from app.db.models.url import UrlsBillModel, UrlsNonBillModel
 from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
-from app.extensions.sqlalchemy.urls_manager import UrlsManager
-from app.scraper.base_icd import BaseICD
+from app.db.schemas.schemas import PaginationSchema, UrlsSchema, DetailsSchema
 
 
 class UrlParser(BaseICD):
@@ -15,7 +18,13 @@ class UrlParser(BaseICD):
 
     """
 
-    def __init__(self, pagination_model, urls_model, opposite_urls_model, details_model):
+    def __init__(
+            self,
+            pagination_model: type[PaginationSchema],
+            urls_model: type[UrlsSchema],
+            opposite_urls_model: type[UrlsSchema],
+            details_model: type[DetailsSchema]
+    ) -> None:
         """
         :param pagination_model: pagination model
         :param urls_model: current url model
@@ -24,13 +33,13 @@ class UrlParser(BaseICD):
 
         """
 
-        self.headers = settings.headers
-        self.pagination_model = pagination_model
-        self.urls_model = urls_model
-        self.opposite_urls_model = opposite_urls_model
-        self.details_model = details_model
+        self.headers: dict[str] = settings.headers
+        self.pagination_model: type[PaginationSchema] = pagination_model
+        self.urls_model: type[UrlsSchema] = urls_model
+        self.opposite_urls_model: type[UrlsSchema] = opposite_urls_model
+        self.details_model: type[DetailsSchema] = details_model
 
-    async def get_icd_data(self, session, url):
+    async def get_icd_data(self, session, url) -> list[dict[str, any]]:
         """
         Async method to fetch URLs from page
 
@@ -108,6 +117,7 @@ class UrlsNonBillable(UrlParser):
 
 class UrlsBillable(UrlParser):
     """Parser for billable ICD"""
+
     def __init__(self):
         super().__init__(
             pagination_model=PaginationBillModel,

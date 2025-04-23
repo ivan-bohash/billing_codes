@@ -3,11 +3,12 @@ import itertools
 from abc import ABCMeta, abstractmethod
 
 import aiohttp
+from aiohttp import ClientSession
 
 
 class BaseICD(metaclass=ABCMeta):
     @staticmethod
-    async def exception_handler(e):
+    async def exception_handler(e: Exception) -> None:
         """
         Logs exception and delays execution for 1 minute before retrying
 
@@ -20,7 +21,7 @@ class BaseICD(metaclass=ABCMeta):
         await asyncio.sleep(60)
 
     @abstractmethod
-    async def get_icd_data(self, session, url):
+    async def get_icd_data(self, session: ClientSession, url: str) -> list[dict[str, any]]:
         """
         Fetches data from the provided URL
 
@@ -32,7 +33,7 @@ class BaseICD(metaclass=ABCMeta):
 
         """
 
-    async def get_all(self, session, url):
+    async def get_all(self, session: ClientSession, url: str) -> list[dict[str, any]]:
         """
         Wrapper method to fetch data using 'get_icd_data' method
 
@@ -46,7 +47,7 @@ class BaseICD(metaclass=ABCMeta):
 
         return await self.get_icd_data(session=session, url=url)
 
-    async def run_all(self, session, urls):
+    async def run_all(self, session: ClientSession, urls: list[str]) -> list[dict[str, any]]:
         """
         :param session: current aiohttp.ClientSession
         :param urls: List of URLs to fetch from

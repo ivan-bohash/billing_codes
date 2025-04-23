@@ -1,12 +1,14 @@
 import asyncio
 from lxml import html
 import re
+
 from app.config import settings
 from app.db.init_db import SessionLocal
+from app.scraper.base_icd import BaseICD
+
 from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
 from app.db.models.url import UrlsBillModel, UrlsNonBillModel
 from app.extensions.sqlalchemy.details_manager import DetailsManager
-from app.scraper.base_icd import BaseICD
 
 
 class DetailParser(BaseICD):

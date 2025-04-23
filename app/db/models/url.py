@@ -1,4 +1,5 @@
 from sqlalchemy import String, Column
+
 from app.db.init_db import Base
 from app.db.models.abstract import MainMixin
 
