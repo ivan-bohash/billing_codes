@@ -48,7 +48,7 @@ setup(
         "setuptools==79.0.0",
         "shellingham==1.5.4",
         "sniffio==1.3.1",
-        "SQLAlchemy==2.0.37",
+        "SQLAlchemy==2.0.40",
         "SQLAlchemy-Utils==0.41.2",
         "starlette==0.45.3",
         "typer==0.15.1",

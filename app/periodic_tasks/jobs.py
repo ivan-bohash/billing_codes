@@ -2,7 +2,7 @@ from app.scraper.pagination import run_pagination_parser
 from app.scraper.urls import run_urls_parser
 from app.scraper.details import run_details_parser
 
-cron_string = "14 * * * *"
+cron_string = "* * * * *"
 
 scheduler_jobs = [
     # List of jobs where next job runs when previous is finished

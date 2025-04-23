@@ -1,16 +1,20 @@
 import requests
 from lxml import html
+from typing import Type
 
 from app.db.init_db import SessionLocal
 from app.config import settings
 from app.extensions.sqlalchemy.pagination_manager import PaginationManager
 
-from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
-from app.db.schemas.schemas import PaginationSchema
+from app.db.models.pagination import PaginationBaseModel, PaginationBillModel, PaginationNonBillModel
 
 
 class PaginationParser:
-    def __init__(self, base_url: str, pagination_model: type[PaginationSchema]) -> None:
+    def __init__(
+            self,
+            base_url: str,
+            pagination_model: Type[PaginationBaseModel]
+    ) -> None:
         """
         :param base_url: base URL to parse pagination data from
         :param pagination_model: model to manage pagination data
@@ -19,10 +23,14 @@ class PaginationParser:
 
         self.headers: dict[str] = settings.headers
         self.base_url: str = base_url
-        self.pagination_model: type[PaginationSchema] = pagination_model
+        self.pagination_model: Type[PaginationBaseModel] = pagination_model
 
     def extract_pagination_urls(self) -> list[str]:
         """
+        Method to create list of URLs.
+
+        Depends on number of last page of base url
+
         :return: List of pagination URLs
         :rtype: list[str]
 
@@ -42,19 +50,20 @@ class PaginationParser:
 
     def manage_pagination(self) -> None:
         """
+        Method to fetch and save URLs to database
+
         :return: None
 
         """
+
         with SessionLocal() as db:
             # fetch pagination URLs
-            urls: list[str] = self.extract_pagination_urls()
+            fetch_data: list[str] = self.extract_pagination_urls()
 
             pagination_manager = PaginationManager(
                 db=db,
                 pagination_model=self.pagination_model,
-
-                # pass pagination URLs to pagination manager
-                fetch_data=urls
+                fetch_data=fetch_data
             )
 
             pagination_manager.run()
@@ -63,7 +72,9 @@ class PaginationParser:
 class PaginationNonBillable(PaginationParser):
     """
     Parser for non-billable ICD
+
     """
+
     def __init__(self) -> None:
         super().__init__(
             base_url=settings.non_billable_url,
@@ -74,7 +85,9 @@ class PaginationNonBillable(PaginationParser):
 class PaginationBillable(PaginationParser):
     """
     Parser for billable ICD
+
     """
+
     def __init__(self) -> None:
         super().__init__(
             base_url=settings.billable_url,
@@ -82,7 +95,7 @@ class PaginationBillable(PaginationParser):
         )
 
 
-def run_pagination_parser():
+def run_pagination_parser() -> None:
     """
     Run billable and non-billable parsers
 
@@ -95,5 +108,4 @@ def run_pagination_parser():
 
     non_billable_parser.manage_pagination()
     billable_parser.manage_pagination()
-
 

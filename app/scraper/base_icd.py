@@ -21,7 +21,7 @@ class BaseICD(metaclass=ABCMeta):
         await asyncio.sleep(60)
 
     @abstractmethod
-    async def get_icd_data(self, session: ClientSession, url: str) -> list[dict[str, any]]:
+    async def get_icd_data(self, session: ClientSession, url: str) -> list[dict[str, str]]:
         """
         Fetches data from the provided URL
 
@@ -33,7 +33,7 @@ class BaseICD(metaclass=ABCMeta):
 
         """
 
-    async def get_all(self, session: ClientSession, url: str) -> list[dict[str, any]]:
+    async def get_all(self, session: ClientSession, url: str) -> list[dict[str, str]]:
         """
         Wrapper method to fetch data using 'get_icd_data' method
 
@@ -47,7 +47,7 @@ class BaseICD(metaclass=ABCMeta):
 
         return await self.get_icd_data(session=session, url=url)
 
-    async def run_all(self, session: ClientSession, urls: list[str]) -> list[dict[str, any]]:
+    async def run_all(self, session: ClientSession, urls: list[str]) -> list[dict[str, str]]:
         """
         :param session: current aiohttp.ClientSession
         :param urls: List of URLs to fetch from
@@ -62,7 +62,7 @@ class BaseICD(metaclass=ABCMeta):
 
         return list(itertools.chain(*result))
 
-    async def main(self, urls, step=100):
+    async def main(self, urls: list[str]) -> list[dict[str, str]]:
         """
         Method that fetches data in batches
         in order to avoid blocking by the server
@@ -77,6 +77,7 @@ class BaseICD(metaclass=ABCMeta):
 
         result = []
         start = 0
+        step = 100
 
         async with aiohttp.ClientSession() as session:
             print(f"Sleeping 30 seconds after each request to avoid server blocking")

@@ -1,15 +1,28 @@
 import arrow
+from arrow import Arrow
+from typing import Type, Callable
+
+from sqlalchemy.orm import Session
+
+from app.db.models.url import UrlsBaseModel
+from app.db.models.detail import DetailsBaseModel
 
 
 class DetailsManager:
     """
     Manager responsible for updating existing records
 
-    and adding new details to the database
+    and creating new details in the database
 
     """
 
-    def __init__(self, db, urls_model, details_model, fetch_method):
+    def __init__(
+            self,
+            db: Session,
+            urls_model: Type[UrlsBaseModel],
+            details_model: Type[DetailsBaseModel],
+            fetch_method: Callable
+    ):
         """
         :param db: current database session
         :param urls_model: model that stores ICD URLs
@@ -18,13 +31,13 @@ class DetailsManager:
 
         """
 
-        self.db = db
-        self.urls_model = urls_model
-        self.details_model = details_model
-        self.fetch_method = fetch_method
-        self.updated_at = arrow.utcnow()
+        self.db: Session = db
+        self.urls_model: Type[UrlsBaseModel] = urls_model
+        self.details_model: Type[DetailsBaseModel] = details_model
+        self.fetch_method: Callable = fetch_method
+        self.updated_at: Arrow = arrow.utcnow()
 
-    async def add_details(self):
+    async def add_details(self) -> None:
         """
         Check url model for new records and add them to details model
 
@@ -52,7 +65,7 @@ class DetailsManager:
             self.db.commit()
             print(f"{self.details_model.__name__}: {len(new_details)} added details")
 
-    def update_details(self):
+    def update_details(self) -> None:
         """
         Update field 'updated_at' for all records in details model
 
@@ -70,7 +83,7 @@ class DetailsManager:
         self.db.commit()
         print(f"{self.details_model.__name__}: {len(data)} updated details")
 
-    async def run(self):
+    async def run(self) -> None:
         """
         Run all methods
 
@@ -80,3 +93,5 @@ class DetailsManager:
         """
         await self.add_details()
         self.update_details()
+
+

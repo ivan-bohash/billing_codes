@@ -1,15 +1,32 @@
 import arrow
+from arrow import Arrow
+from typing import Type, Callable
+
+from sqlalchemy.orm import Session
+
+from app.db.models.pagination import PaginationBaseModel
+from app.db.models.url import UrlsBaseModel
+from app.db.models.detail import DetailsBaseModel
 
 
 class UrlsManager:
     """
-    Manager responsible for updating existing records,
+    Manager responsible for updating, creating records
 
-    adding new urls and deleting urls with associated details in the database
+    and deleting urls with associated details in the database
 
     """
 
-    def __init__(self, db, pagination_model, urls_model, opposite_urls_model, details_model, fetch_method):
+    def __init__(
+            self,
+            db: Session,
+            pagination_model: Type[PaginationBaseModel],
+            urls_model: Type[UrlsBaseModel],
+            opposite_urls_model: Type[UrlsBaseModel],
+            details_model: Type[DetailsBaseModel],
+            fetch_method: Callable
+    ) -> None:
+
         """
         :param db: current database session
         :param pagination_model: model that stores pagination links
@@ -20,15 +37,15 @@ class UrlsManager:
 
         """
 
-        self.db = db
-        self.pagination_model = pagination_model
-        self.urls_model = urls_model
-        self.opposite_urls_model = opposite_urls_model
-        self.details_model = details_model
-        self.fetch_method = fetch_method
-        self.updated_at = arrow.utcnow()
+        self.db: Session = db
+        self.pagination_model: Type[PaginationBaseModel] = pagination_model
+        self.urls_model: Type[UrlsBaseModel] = urls_model
+        self.opposite_urls_model: Type[UrlsBaseModel] = opposite_urls_model
+        self.details_model: Type[DetailsBaseModel] = details_model
+        self.fetch_method: Callable = fetch_method
+        self.updated_at: Arrow = arrow.utcnow()
 
-    async def update_urls(self):
+    async def update_urls(self) -> None:
         """
         Fetches URLs data, update or add new records
 
@@ -42,7 +59,7 @@ class UrlsManager:
         # fetch URLs data
         fetched_data = await self.fetch_method(urls=urls)
 
-        def update():
+        def update() -> None:
             """
             Update field "updated_at" for records that exist in database
 
@@ -68,7 +85,7 @@ class UrlsManager:
 
                 print(f"{self.urls_model.__name__}: {len(data)} updated elements")
 
-        def add_new():
+        def add_new() -> None:
             """
             Add new records if they don't exist to the database
 
@@ -94,7 +111,7 @@ class UrlsManager:
         update()
         add_new()
 
-    def delete_urls(self):
+    def delete_urls(self) -> None:
         """
         Delete outdated ICD from database and remove ICD from details model
 
@@ -114,6 +131,7 @@ class UrlsManager:
 
             # delete ICD from details model
             urls_icd_code = [url.icd_code for url in urls_to_delete]
+
             for icd_code in urls_icd_code:
                 detail = (self.db.query(self.details_model).
                           filter(self.details_model.icd_code == icd_code).

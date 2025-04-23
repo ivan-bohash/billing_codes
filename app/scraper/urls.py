@@ -1,15 +1,17 @@
 import asyncio
 from lxml import html
+from typing import Type
+
+from aiohttp import ClientSession
 
 from app.config import settings
 from app.scraper.base_icd import BaseICD
 from app.db.init_db import SessionLocal
 from app.extensions.sqlalchemy.urls_manager import UrlsManager
 
-from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
-from app.db.models.url import UrlsBillModel, UrlsNonBillModel
-from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
-from app.db.schemas.schemas import PaginationSchema, UrlsSchema, DetailsSchema
+from app.db.models.pagination import PaginationBaseModel, PaginationBillModel, PaginationNonBillModel
+from app.db.models.url import UrlsBaseModel, UrlsBillModel, UrlsNonBillModel
+from app.db.models.detail import DetailsBaseModel, DetailsBillModel, DetailsNonBillModel
 
 
 class UrlParser(BaseICD):
@@ -20,10 +22,10 @@ class UrlParser(BaseICD):
 
     def __init__(
             self,
-            pagination_model: type[PaginationSchema],
-            urls_model: type[UrlsSchema],
-            opposite_urls_model: type[UrlsSchema],
-            details_model: type[DetailsSchema]
+            pagination_model: Type[PaginationBaseModel],
+            urls_model: Type[UrlsBaseModel],
+            opposite_urls_model: Type[UrlsBaseModel],
+            details_model: Type[DetailsBaseModel]
     ) -> None:
         """
         :param pagination_model: pagination model
@@ -34,12 +36,12 @@ class UrlParser(BaseICD):
         """
 
         self.headers: dict[str] = settings.headers
-        self.pagination_model: type[PaginationSchema] = pagination_model
-        self.urls_model: type[UrlsSchema] = urls_model
-        self.opposite_urls_model: type[UrlsSchema] = opposite_urls_model
-        self.details_model: type[DetailsSchema] = details_model
+        self.pagination_model: Type[PaginationBaseModel] = pagination_model
+        self.urls_model: Type[UrlsBaseModel] = urls_model
+        self.opposite_urls_model: Type[UrlsBaseModel] = opposite_urls_model
+        self.details_model: Type[DetailsBaseModel] = details_model
 
-    async def get_icd_data(self, session, url) -> list[dict[str, any]]:
+    async def get_icd_data(self, session: ClientSession, url: str) -> list[dict[str, str]]:
         """
         Async method to fetch URLs from page
 
@@ -75,7 +77,7 @@ class UrlParser(BaseICD):
                     print(f"Error: icd({url.split('/')[-1]}). Sleep 30 sec")
                     await asyncio.sleep(30)
 
-    async def manage_urls(self, task):
+    async def manage_urls(self, task: str) -> None:
         """
         Async method to manage tasks using UrlsManager
 
@@ -83,6 +85,7 @@ class UrlParser(BaseICD):
         :return: None
 
         """
+
         with SessionLocal() as db:
             icd_manager = UrlsManager(
                 db=db,
@@ -104,9 +107,12 @@ class UrlParser(BaseICD):
 
 
 class UrlsNonBillable(UrlParser):
-    """Parser for non-billable ICD"""
+    """
+    Parser for non-billable ICD
 
-    def __init__(self):
+    """
+
+    def __init__(self) -> None:
         super().__init__(
             pagination_model=PaginationNonBillModel,
             urls_model=UrlsNonBillModel,
@@ -116,9 +122,12 @@ class UrlsNonBillable(UrlParser):
 
 
 class UrlsBillable(UrlParser):
-    """Parser for billable ICD"""
+    """
+    Parser for billable ICD
 
-    def __init__(self):
+    """
+
+    def __init__(self) -> None:
         super().__init__(
             pagination_model=PaginationBillModel,
             urls_model=UrlsBillModel,
@@ -127,7 +136,7 @@ class UrlsBillable(UrlParser):
         )
 
 
-def run_urls_parser(task):
+def run_urls_parser(task: str) -> None:
     """
     Pass task and run billable and non-billable parsers
 

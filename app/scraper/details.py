@@ -1,14 +1,17 @@
 import asyncio
 from lxml import html
 import re
+from typing import Type
+
+from aiohttp import ClientSession
 
 from app.config import settings
 from app.db.init_db import SessionLocal
 from app.scraper.base_icd import BaseICD
-
-from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
-from app.db.models.url import UrlsBillModel, UrlsNonBillModel
 from app.extensions.sqlalchemy.details_manager import DetailsManager
+
+from app.db.models.url import UrlsBaseModel, UrlsBillModel, UrlsNonBillModel
+from app.db.models.detail import DetailsBaseModel, DetailsBillModel, DetailsNonBillModel
 
 
 class DetailParser(BaseICD):
@@ -17,20 +20,24 @@ class DetailParser(BaseICD):
 
     """
 
-    def __init__(self, urls_model, details_model):
+    def __init__(
+            self,
+            urls_model: Type[UrlsBaseModel],
+            details_model: Type[DetailsBaseModel]
+    ) -> None:
         """
         :param urls_model: url model that stores URLs to parse
         :param details_model: details model where parsed data are saved
 
         """
 
-        self.headers = settings.headers
-        self.urls_model = urls_model
-        self.details_model = details_model
+        self.headers: dict[str] = settings.headers
+        self.urls_model: Type[UrlsBaseModel] = urls_model
+        self.details_model: Type[DetailsBaseModel] = details_model
 
-    async def get_icd_data(self, session, url):
+    async def get_icd_data(self, session: ClientSession, url: str) -> list[dict[str, str]]:
         """
-        Async method to fetch detailed ICD information from given URL
+        Method to fetch detailed ICD information from given URL
 
         :param session: current aiohttp.ClientSession
         :param url: url to fetch data from
@@ -60,7 +67,7 @@ class DetailParser(BaseICD):
 
         return icd_details
 
-    async def manage_details(self):
+    async def manage_details(self) -> None:
         """
         Async method to manage fetching using DetailsManager
 
@@ -82,7 +89,7 @@ class DetailsNonBillable(DetailParser):
 
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             urls_model=UrlsNonBillModel,
             details_model=DetailsNonBillModel
@@ -94,16 +101,19 @@ class DetailsBillable(DetailParser):
     Parser for billable ICD
 
     """
-    def __init__(self):
+
+    def __init__(self) -> None:
         super().__init__(
             urls_model=UrlsBillModel,
             details_model=DetailsBillModel
         )
 
 
-def run_details_parser():
+def run_details_parser() -> None:
     """
     Method to run non-billable and billable parsers
+
+    :return: None
 
     """
 
@@ -117,3 +127,4 @@ def run_details_parser():
     asyncio.run(run_parsers())
 
 
+run_details_parser()

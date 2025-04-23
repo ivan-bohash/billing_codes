@@ -1,8 +1,26 @@
 import arrow
+from arrow import Arrow
+from typing import Type
+
+from sqlalchemy.orm import Session
+
+from app.db.models.pagination import PaginationBaseModel
 
 
 class PaginationManager:
-    def __init__(self, db, pagination_model, fetch_data):
+    """
+    Manager responsible for creating, updating
+
+    and deleting pagination records in the database
+
+    """
+
+    def __init__(
+            self,
+            db: Session,
+            pagination_model: Type[PaginationBaseModel],
+            fetch_data: list[str]
+    ) -> None:
         """
 
         :param db: current database session
@@ -10,16 +28,18 @@ class PaginationManager:
         :param fetch_data: list of urls to fetch data from
 
         """
-        self.db = db
-        self.pagination_model = pagination_model
-        self.fetch_data = fetch_data
-        self.updated_at = arrow.utcnow()
 
-    def add_pagination(self):
+        self.db: Session = db
+        self.pagination_model: Type[PaginationBaseModel] = pagination_model
+        self.fetch_data: list[str] = fetch_data
+        self.updated_at: Arrow = arrow.utcnow()
+
+    def add_pagination(self) -> None:
         """
         Add new URLs if not exists in database
 
         :return: None
+
         """
 
         new_pagination = []
@@ -37,9 +57,11 @@ class PaginationManager:
             self.db.commit()
             print(f"{self.pagination_model.__name__}: {len(new_pagination)} added elements")
 
-    def update_pagination(self):
+    def update_pagination(self) -> None:
         """
         Update field "updated_at" for URLs that in fetched data
+
+        :return: None
 
         """
 
@@ -49,9 +71,11 @@ class PaginationManager:
         self.db.commit()
         print(f"{self.pagination_model.__name__}: updated")
 
-    def delete_pagination(self):
+    def delete_pagination(self) -> None:
         """
         Delete URLs that was not updated
+
+        :return: None
 
         """
 
@@ -64,9 +88,11 @@ class PaginationManager:
 
         self.db.commit()
 
-    def run(self):
+    def run(self) -> None:
         """
         Run all methods
+
+        :return: None
 
         """
 
