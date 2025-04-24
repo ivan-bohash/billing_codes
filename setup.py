@@ -54,7 +54,6 @@ setup(
         "typing_extensions==4.12.2",
         "uvicorn==0.34.0",
         "uvloop==0.21.0",
-        "watchfiles==1.0.4",
         "websockets==14.2",
     ]
 )
