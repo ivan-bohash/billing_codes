@@ -8,7 +8,7 @@ from aiohttp import ClientSession
 from app.config import settings
 from app.db.init_db import SessionLocal
 from app.scraper.base_icd import BaseICD
-from app.extensions.sqlalchemy.details_manager import DetailsManager
+from app.extensions.services.details_service import DetailsService
 
 from app.db.models.url import UrlsBaseModel, UrlsBillModel, UrlsNonBillModel
 from app.db.models.detail import DetailsBaseModel, DetailsBillModel, DetailsNonBillModel
@@ -73,7 +73,7 @@ class DetailParser(BaseICD):
 
         """
         with SessionLocal() as db:
-            details_manager = DetailsManager(
+            details_manager = DetailsService(
                 db=db,
                 urls_model=self.urls_model,
                 details_model=self.details_model,

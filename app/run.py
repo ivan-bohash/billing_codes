@@ -38,8 +38,7 @@ class PeriodicTask(RedisWorker):
                 args=job["args"],
                 depends_on=depends_on,
                 queue_name=self.queue_name,
-
-                # 20 seconds
+                # 20 minutes
                 timeout=1200
             )
 

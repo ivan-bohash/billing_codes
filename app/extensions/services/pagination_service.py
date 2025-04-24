@@ -7,9 +7,9 @@ from sqlalchemy.orm import Session
 from app.db.models.pagination import PaginationBaseModel
 
 
-class PaginationManager:
+class PaginationService:
     """
-    Manager responsible for creating, updating
+    Service responsible for creating, updating
 
     and deleting pagination records in the database
 

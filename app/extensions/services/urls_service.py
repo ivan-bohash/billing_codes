@@ -9,9 +9,9 @@ from app.db.models.url import UrlsBaseModel
 from app.db.models.detail import DetailsBaseModel
 
 
-class UrlsManager:
+class UrlsService:
     """
-    Manager responsible for updating, creating records
+    Service responsible for updating, creating records
 
     and deleting urls with associated details in the database
 
@@ -67,7 +67,7 @@ class UrlsManager:
 
             """
 
-            # create dict from urls model data
+            # create dict from urls model
             db_urls = {
                 url.icd_code: url.id
                 for url in self.db.query(self.urls_model).all()

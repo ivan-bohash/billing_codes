@@ -4,7 +4,7 @@ from typing import Type
 
 from app.db.init_db import SessionLocal
 from app.config import settings
-from app.extensions.sqlalchemy.pagination_manager import PaginationManager
+from app.extensions.services.pagination_service import PaginationService
 
 from app.db.models.pagination import PaginationBaseModel, PaginationBillModel, PaginationNonBillModel
 
@@ -60,7 +60,7 @@ class PaginationParser:
             # fetch pagination URLs
             fetch_data: list[str] = self.extract_pagination_urls()
 
-            pagination_manager = PaginationManager(
+            pagination_manager = PaginationService(
                 db=db,
                 pagination_model=self.pagination_model,
                 fetch_data=fetch_data

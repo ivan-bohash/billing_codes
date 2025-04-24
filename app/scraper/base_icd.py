@@ -93,7 +93,7 @@ class BaseICD(metaclass=ABCMeta):
 
                     # update start index for the next batch
                     start += step
-                    print(f"{min(start, len(urls))}/{len(urls)}")
+                    print(f"[{end}/{len(urls)}]")
 
                     # sleep if more urls remain
                     if end != len(urls):

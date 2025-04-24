@@ -7,7 +7,7 @@ from aiohttp import ClientSession
 from app.config import settings
 from app.scraper.base_icd import BaseICD
 from app.db.init_db import SessionLocal
-from app.extensions.sqlalchemy.urls_manager import UrlsManager
+from app.extensions.services.urls_service import UrlsService
 
 from app.db.models.pagination import PaginationBaseModel, PaginationBillModel, PaginationNonBillModel
 from app.db.models.url import UrlsBaseModel, UrlsBillModel, UrlsNonBillModel
@@ -74,7 +74,7 @@ class UrlParser(BaseICD):
                     return base_urls
 
                 else:
-                    print(f"Error: icd({url.split('/')[-1]}). Sleep 30 sec")
+                    print(f"[{url.split('/')[-1]}] exception: sleep 30 sec")
                     await asyncio.sleep(30)
 
     async def manage_urls(self, task: str) -> None:
@@ -87,7 +87,7 @@ class UrlParser(BaseICD):
         """
 
         with SessionLocal() as db:
-            icd_manager = UrlsManager(
+            icd_manager = UrlsService(
                 db=db,
                 pagination_model=self.pagination_model,
                 urls_model=self.urls_model,

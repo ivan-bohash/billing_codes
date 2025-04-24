@@ -8,9 +8,9 @@ from app.db.models.url import UrlsBaseModel
 from app.db.models.detail import DetailsBaseModel
 
 
-class DetailsManager:
+class DetailsService:
     """
-    Manager responsible for updating existing records
+    Service responsible for updating existing records
 
     and creating new details in the database
 
