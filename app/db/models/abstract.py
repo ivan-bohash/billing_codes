@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer
+from sqlalchemy import Integer
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy_utils import ArrowType
 import arrow
+from arrow import Arrow
 
 
 class MainMixin:
@@ -9,11 +11,11 @@ class MainMixin:
 
     """
 
-    default_time = arrow.utcnow()
+    default_time: Arrow = arrow.utcnow()
 
-    id = Column(Integer, doc="ID", primary_key=True)
-    created_at = Column(ArrowType, doc="Created At", default=default_time, nullable=False)
-    updated_at = Column(ArrowType, doc="Updated At", default=default_time, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, doc="ID", primary_key=True)
+    created_at: Mapped[Arrow] = mapped_column(ArrowType, doc="Created At", default=default_time, nullable=False)
+    updated_at: Mapped[Arrow] = mapped_column(ArrowType, doc="Updated At", default=default_time, nullable=False)
 
     # custom repr method
     def _repr(self, **kwargs):

@@ -73,14 +73,14 @@ class DetailParser(BaseICD):
 
         """
         with SessionLocal() as db:
-            details_manager = DetailsService(
+            details_service = DetailsService(
                 db=db,
                 urls_model=self.urls_model,
                 details_model=self.details_model,
                 fetch_method=self.main
             )
 
-            await details_manager.run()
+            await details_service.run()
 
 
 class DetailsNonBillable(DetailParser):

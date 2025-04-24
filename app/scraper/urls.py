@@ -87,21 +87,20 @@ class UrlParser(BaseICD):
         """
 
         with SessionLocal() as db:
-            icd_manager = UrlsService(
+            url_service = UrlsService(
                 db=db,
                 pagination_model=self.pagination_model,
                 urls_model=self.urls_model,
                 opposite_urls_model=self.opposite_urls_model,
                 details_model=self.details_model,
-
                 # method from BaseICD
                 fetch_method=self.main
             )
 
             if task == "update":
-                await icd_manager.update_urls()
+                await url_service.update_urls()
             elif task == "delete":
-                icd_manager.delete_urls()
+                url_service.delete_urls()
             else:
                 raise ValueError("Unknown task")
 
@@ -150,7 +149,6 @@ def run_urls_parser(task: str) -> None:
 
     async def run_parsers():
         await non_billable_parser.manage_urls(task)
-
         # extra sleep to avoid server blocking
         await asyncio.sleep(10)
         await billable_parser.manage_urls(task)

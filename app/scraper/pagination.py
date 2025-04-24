@@ -60,13 +60,13 @@ class PaginationParser:
             # fetch pagination URLs
             fetch_data: list[str] = self.extract_pagination_urls()
 
-            pagination_manager = PaginationService(
+            pagination_service = PaginationService(
                 db=db,
                 pagination_model=self.pagination_model,
                 fetch_data=fetch_data
             )
 
-            pagination_manager.run()
+            pagination_service.run()
 
 
 class PaginationNonBillable(PaginationParser):
