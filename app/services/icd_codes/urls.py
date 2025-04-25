@@ -30,7 +30,7 @@ class UrlsService:
         """
         :param db: current database session
         :param pagination_model: model that stores pagination links
-        :param urls_model: model that stores urls and icd_code
+        :param urls_model: model that stores urls and icd_codes
         :param opposite_urls_model: opposite model to check records
         :param details_model: model that stores ICD detailed information
         :param fetch_method: async method to fetch data
@@ -76,7 +76,7 @@ class UrlsService:
             if db_urls:
                 # update only existing in database records
                 data = [
-                    {"id": db_urls.get(icd["icd_code"]), "updated_at": self.updated_at}
+                    {"id": db_urls.get(icd["icd_codes"]), "updated_at": self.updated_at}
                     for icd in fetched_data
                 ]
 
@@ -99,8 +99,8 @@ class UrlsService:
 
             for data in fetched_data:
                 # add only if icd doesn't exist in database
-                if data["icd_code"] not in db_icd_codes:
-                    icd = self.urls_model(icd_code=data["icd_code"], url=data["url"])
+                if data["icd_codes"] not in db_icd_codes:
+                    icd = self.urls_model(icd_code=data["icd_codes"], url=data["url"])
                     new_icd_codes.append(icd)
 
             if new_icd_codes:

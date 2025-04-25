@@ -4,7 +4,7 @@ from typing import Type
 
 from app.db.init_db import SessionLocal
 from app.config import settings
-from app.extensions.services.pagination_service import PaginationService
+from app.services.icd_codes.pagination import PaginationService
 
 from app.db.models.pagination import PaginationBaseModel, PaginationBillModel, PaginationNonBillModel
 

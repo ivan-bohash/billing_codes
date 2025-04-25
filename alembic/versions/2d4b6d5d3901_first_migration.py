@@ -25,21 +25,21 @@ def upgrade() -> None:
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('created_at', sqlalchemy_utils.types.arrow.ArrowType(), nullable=False),
                     sa.Column('updated_at', sqlalchemy_utils.types.arrow.ArrowType(), nullable=False),
-                    sa.Column('icd_code', sa.String(), nullable=False),
+                    sa.Column('icd_codes', sa.String(), nullable=False),
                     sa.Column('detail', sa.String(), nullable=False),
                     sa.PrimaryKeyConstraint('id')
                     )
-    op.create_index(op.f('ix_details_billable_icd_code'), 'details_billable', ['icd_code'], unique=False)
+    op.create_index(op.f('ix_details_billable_icd_code'), 'details_billable', ['icd_codes'], unique=False)
 
     op.create_table('details_non_billable',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('created_at', sqlalchemy_utils.types.arrow.ArrowType(), nullable=False),
                     sa.Column('updated_at', sqlalchemy_utils.types.arrow.ArrowType(), nullable=False),
-                    sa.Column('icd_code', sa.String(), nullable=False),
+                    sa.Column('icd_codes', sa.String(), nullable=False),
                     sa.Column('detail', sa.String(), nullable=False),
                     sa.PrimaryKeyConstraint('id')
                     )
-    op.create_index(op.f('ix_details_non_billable_icd_code'), 'details_non_billable', ['icd_code'], unique=False)
+    op.create_index(op.f('ix_details_non_billable_icd_code'), 'details_non_billable', ['icd_codes'], unique=False)
 
     op.create_table('pagination_billable',
                     sa.Column('id', sa.Integer(), nullable=False),
@@ -61,21 +61,21 @@ def upgrade() -> None:
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('created_at', sqlalchemy_utils.types.arrow.ArrowType(), nullable=False),
                     sa.Column('updated_at', sqlalchemy_utils.types.arrow.ArrowType(), nullable=False),
-                    sa.Column('icd_code', sa.String(), nullable=False),
+                    sa.Column('icd_codes', sa.String(), nullable=False),
                     sa.Column('url', sa.String(), nullable=False),
                     sa.PrimaryKeyConstraint('id')
                     )
-    op.create_index(op.f('ix_urls_billable_icd_code'), 'urls_billable', ['icd_code'], unique=False)
+    op.create_index(op.f('ix_urls_billable_icd_code'), 'urls_billable', ['icd_codes'], unique=False)
 
     op.create_table('urls_non_billable',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('created_at', sqlalchemy_utils.types.arrow.ArrowType(), nullable=False),
                     sa.Column('updated_at', sqlalchemy_utils.types.arrow.ArrowType(), nullable=False),
-                    sa.Column('icd_code', sa.String(), nullable=False),
+                    sa.Column('icd_codes', sa.String(), nullable=False),
                     sa.Column('url', sa.String(), nullable=False),
                     sa.PrimaryKeyConstraint('id')
                     )
-    op.create_index(op.f('ix_urls_non_billable_icd_code'), 'urls_non_billable', ['icd_code'], unique=False)
+    op.create_index(op.f('ix_urls_non_billable_icd_code'), 'urls_non_billable', ['icd_codes'], unique=False)
     # ### end Alembic commands ###
 
 

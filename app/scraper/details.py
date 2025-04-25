@@ -8,7 +8,7 @@ from aiohttp import ClientSession
 from app.config import settings
 from app.db.init_db import SessionLocal
 from app.scraper.base_icd import BaseICD
-from app.extensions.services.details_service import DetailsService
+from app.services.icd_codes.details import DetailsService
 
 from app.db.models.url import UrlsBaseModel, UrlsBillModel, UrlsNonBillModel
 from app.db.models.detail import DetailsBaseModel, DetailsBillModel, DetailsNonBillModel
@@ -42,7 +42,7 @@ class DetailParser(BaseICD):
         :param session: current aiohttp.ClientSession
         :param url: url to fetch data from
 
-        :return: list of dictionaries with "icd_code" and "detail" with detailed information
+        :return: list of dictionaries with "icd_codes" and "detail" with detailed information
         :rtype: list[dict]
 
         """
@@ -63,7 +63,7 @@ class DetailParser(BaseICD):
             description_detail = ' '.join(description_data)
             detail = re.sub(r'\s+', ' ', description_detail).strip()
 
-            icd_details.append({"icd_code": icd_code, "detail": detail})
+            icd_details.append({"icd_codes": icd_code, "detail": detail})
 
         return icd_details
 

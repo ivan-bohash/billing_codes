@@ -57,7 +57,7 @@ class DetailsService:
             icd_details = await self.fetch_method(urls=urls)
 
             new_details = [
-                self.details_model(icd_code=icd["icd_code"], detail=icd["detail"])
+                self.details_model(icd_code=icd["icd_codes"], detail=icd["detail"])
                 for icd in icd_details
             ]
 

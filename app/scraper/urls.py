@@ -7,7 +7,7 @@ from aiohttp import ClientSession
 from app.config import settings
 from app.scraper.base_icd import BaseICD
 from app.db.init_db import SessionLocal
-from app.extensions.services.urls_service import UrlsService
+from app.services.icd_codes.urls import UrlsService
 
 from app.db.models.pagination import PaginationBaseModel, PaginationBillModel, PaginationNonBillModel
 from app.db.models.url import UrlsBaseModel, UrlsBillModel, UrlsNonBillModel
@@ -48,7 +48,7 @@ class UrlParser(BaseICD):
         :param session: current aiohttp.ClientSession
         :param url: URL to fetch data from
 
-        :return: list of dictionaries with "icd_code" and full "url"
+        :return: list of dictionaries with "icd_codes" and full "url"
         :rtype: list[dict]
 
         """
@@ -67,7 +67,7 @@ class UrlParser(BaseICD):
 
                     for href in icd_hrefs:
                         base_urls.append({
-                            "icd_code": href.split('/')[-1],
+                            "icd_codes": href.split('/')[-1],
                             "url": f'https://www.icd10data.com{href}'
                         })
 
