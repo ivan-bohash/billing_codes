@@ -1,19 +1,27 @@
 import uvicorn
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.db.init_db import engine, Base, get_db
 from app.db.schemas.schemas import IcdSchema
 
-from app.db.models.pagination import PaginationBillModel, PaginationNonBillModel
 from app.db.models.url import UrlsBillModel, UrlsNonBillModel
 from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
+
+templates = Jinja2Templates(directory="templates")
 
 app = FastAPI()
 Base.metadata.create_all(bind=engine)
 
 
-@app.get("/{icd_code}", response_model=IcdSchema)
+@app.get('/', response_class=JSONResponse)
+async def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/icd_codes/{icd_code}", response_model=IcdSchema)
 async def get_code(icd_code: str, db: Session = Depends(get_db)):
     formatted_icd_code = icd_code.strip(' ').upper()
 
