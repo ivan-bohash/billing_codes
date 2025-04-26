@@ -13,6 +13,7 @@ from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
 templates = Jinja2Templates(directory="templates")
 
 app = FastAPI()
+
 Base.metadata.create_all(bind=engine)
 
 
