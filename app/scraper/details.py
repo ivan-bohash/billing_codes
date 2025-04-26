@@ -63,7 +63,7 @@ class DetailParser(BaseICD):
             description_detail = ' '.join(description_data)
             detail = re.sub(r'\s+', ' ', description_detail).strip()
 
-            icd_details.append({"icd_codes": icd_code, "detail": detail})
+            icd_details.append({"icd_code": icd_code, "detail": detail})
 
         return icd_details
 
@@ -125,4 +125,3 @@ def run_details_parser() -> None:
         await billable_parser.manage_details()
 
     asyncio.run(run_parsers())
-

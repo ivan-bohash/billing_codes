@@ -67,7 +67,7 @@ class UrlParser(BaseICD):
 
                     for href in icd_hrefs:
                         base_urls.append({
-                            "icd_codes": href.split('/')[-1],
+                            "icd_code": href.split('/')[-1],
                             "url": f'https://www.icd10data.com{href}'
                         })
 
@@ -154,3 +154,4 @@ def run_urls_parser(task: str) -> None:
         await billable_parser.manage_urls(task)
 
     asyncio.run(run_parsers())
+

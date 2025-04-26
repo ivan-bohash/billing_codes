@@ -2,7 +2,7 @@ import arrow
 from arrow import Arrow
 from typing import Type, Callable
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, class_mapper
 
 from app.db.models.url import UrlsBaseModel
 from app.db.models.detail import DetailsBaseModel
@@ -57,7 +57,7 @@ class DetailsService:
             icd_details = await self.fetch_method(urls=urls)
 
             new_details = [
-                self.details_model(icd_code=icd["icd_codes"], detail=icd["detail"])
+                self.details_model(icd_code=icd["icd_code"], detail=icd["detail"])
                 for icd in icd_details
             ]
 
@@ -79,7 +79,7 @@ class DetailsService:
             for detail in self.db.query(self.details_model).all()
         ]
 
-        self.db.bulk_update_mappings(self.details_model, data)
+        self.db.bulk_update_mappings(class_mapper(self.details_model), data)
         self.db.commit()
         print(f"{self.details_model.__name__}: {len(data)} updated details")
 
@@ -89,8 +89,8 @@ class DetailsService:
 
         :return: None
 
-
         """
+
         await self.add_details()
         self.update_details()
 
