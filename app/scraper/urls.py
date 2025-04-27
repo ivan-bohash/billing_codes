@@ -149,8 +149,6 @@ def run_urls_parser(task: str) -> None:
 
     async def run_parsers():
         await non_billable_parser.manage_urls(task)
-        # extra sleep to avoid server blocking
-        await asyncio.sleep(10)
         await billable_parser.manage_urls(task)
 
     asyncio.run(run_parsers())
