@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.db.init_db import get_db
@@ -9,8 +9,8 @@ from app.db.schemas.schemas import IcdSchema
 from app.db.models.url import UrlsBillModel, UrlsNonBillModel
 from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
 
-router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+router = APIRouter()
 
 
 @router.get('/')

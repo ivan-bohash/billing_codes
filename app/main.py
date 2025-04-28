@@ -6,9 +6,10 @@ from app.api.routes import router
 
 
 app = FastAPI()
-app.include_router(router)
 
 Base.metadata.create_all(bind=engine)
+
+app.include_router(router)
 
 
 if __name__ == "__main__":

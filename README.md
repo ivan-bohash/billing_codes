@@ -9,6 +9,11 @@
 - pip install -e.
 
 ## Running
+To fetch data and update db use commands in terminal:
 - rq worker low
 - rqscheduler
 - python manage.py
+
+To search for specific code:
+- run main.py 
+- navigate to running server in your browser

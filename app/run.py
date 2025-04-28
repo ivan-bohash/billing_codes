@@ -39,7 +39,7 @@ class PeriodicTask(RedisWorker):
                 depends_on=depends_on,
                 queue_name=self.queue_name,
                 # 20 minutes
-                timeout=1200
+                timeout=1200,
             )
 
             # save job id in jod_ids
