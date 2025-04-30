@@ -18,13 +18,13 @@ async def index():
     return {"message": "ICD-10-CM Codes"}
 
 
-@router.get('/search', response_class=JSONResponse)
-async def index(request: Request):
+@router.get('/icd-code', response_class=JSONResponse)
+async def get_code(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@router.get("/icd_codes/{icd_code}", response_model=IcdSchema)
-async def get_code(icd_code: str, db: Session = Depends(get_db)):
+@router.get("/icd-codes/{icd_code}", response_model=IcdSchema)
+async def get_code_json(icd_code: str, db: Session = Depends(get_db)):
     formatted_icd_code = icd_code.strip(' ').upper()
 
     data = [

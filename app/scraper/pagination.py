@@ -41,10 +41,10 @@ class PaginationParser:
 
         # get last index from URL
         last_index: int = int(
-            tree.xpath('//ul[@class="pagination"]/li[@class="PagedList-skipToLast"]/a/@href')[0].split('/')[-1]) + 1
+            tree.xpath('//ul[@class="pagination"]/li[@class="PagedList-skipToLast"]/a/@href')[0].split('/')[-1])
 
         # create list of URLs
-        urls: list[str] = [f"{self.base_url}{i}" for i in range(1, last_index)]
+        urls: list[str] = [f"{self.base_url}{i}" for i in range(1, last_index + 1)]
 
         return urls
 

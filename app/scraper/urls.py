@@ -62,7 +62,7 @@ class UrlParser(BaseICD):
 
                     # get icd href from page
                     icd_hrefs = tree.xpath(
-                        '//ul[following-sibling::div[@class="ad-unit"]]//a[@class="identifier"]/@href'
+                        '//ul[following-sibling::div[@class="pagination-container"]]//a[@class="identifier"]/@href'
                     )
 
                     for href in icd_hrefs:
@@ -152,4 +152,6 @@ def run_urls_parser(task: str) -> None:
         await billable_parser.manage_urls(task)
 
     asyncio.run(run_parsers())
+
+
 

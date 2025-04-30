@@ -9,11 +9,22 @@
 - pip install -e.
 
 ## Running
-To fetch data and update db use commands in terminal:
+1) Open app/periodic_tasks/jobs.py and set time in cron_string.
+
+2) To fetch data and update db use commands in terminal:
 - rq worker low
 - rqscheduler
 - python manage.py
 
-To search for specific code:
-- run main.py 
-- navigate to running server in your browser
+## Usage
+- Run main.py 
+
+Swagger API documentation: 
+- http://127.0.0.1:8000/docs
+
+Or enter icd code in the path:
+- http://127.0.0.1:8000/icd-codes/{icd_code}
+
+Use input to search for icd code:
+- http://127.0.0.1:8000/icd-code
+
