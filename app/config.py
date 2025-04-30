@@ -1,3 +1,5 @@
+import os
+
 from pydantic_settings import BaseSettings
 
 
@@ -21,8 +23,10 @@ class Settings(BaseSettings):
     non_billable_url: str = "https://www.icd10data.com/ICD10CM/Codes/Rules/Non_Billable_Specific_Codes/"
 
     redis: dict = {
-        "host": "localhost",
-        "port": 6379,
+        # "host": "localhost",
+        # "db": 0,
+        "host": os.getenv("REDIS_HOST", "localhost"),
+        "port": os.getenv("REDIS_PORT", 6379),
         "db": 0,
         "queue_name": {
             "low": "low",

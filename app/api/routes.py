@@ -10,6 +10,10 @@ from app.db.models.url import UrlsBillModel, UrlsNonBillModel
 from app.db.models.detail import DetailsBillModel, DetailsNonBillModel
 
 templates = Jinja2Templates(directory="templates")
+
+# for Docker
+# templates = Jinja2Templates(directory="app/templates")
+
 router = APIRouter()
 
 

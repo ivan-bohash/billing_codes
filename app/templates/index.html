@@ -37,7 +37,7 @@
                 }
 
                 try {
-                    const response = await fetch(`/icd_codes/${code}`);
+                    const response = await fetch(`/icd-codes/${code}`);
                     const data = await response.json();
                     tableBody.innerHTML = "";
 
@@ -52,7 +52,7 @@
                                   }
                             </td>
                         `;
-                        console.log(key)
+
                         tableBody.appendChild(row);
                     }
 

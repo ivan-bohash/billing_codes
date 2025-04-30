@@ -4,6 +4,9 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 db_path = "sqlite:////home/ivan/Projects/icd_codes/data/icd_codes.db"
 
+# for Docker
+# db_path = "sqlite:////app/data/icd_codes.db"
+
 engine = create_engine(
     db_path,
     connect_args={"check_same_thread": False},
