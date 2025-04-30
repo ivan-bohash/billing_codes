@@ -103,8 +103,8 @@ def run_pagination_parser() -> None:
 
     """
 
-    non_billable_parser: PaginationNonBillable = PaginationNonBillable()
-    billable_parser: PaginationBillable = PaginationBillable()
+    non_billable_parser = PaginationNonBillable()
+    billable_parser = PaginationBillable()
 
     non_billable_parser.manage_pagination()
     billable_parser.manage_pagination()
