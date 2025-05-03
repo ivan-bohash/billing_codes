@@ -7,7 +7,7 @@ class IcdSchema(BaseModel):
     rule: str
     updated: datetime
     url: str
-    details: str
+    code_history: str
 
 
 class UrlSchema(BaseModel):

@@ -1,6 +1,6 @@
 from app.scraper.pagination import run_pagination_parser
 from app.scraper.urls import run_urls_parser
-from app.scraper.details import run_details_parser
+from app.scraper.history import run_history_parser
 
 cron_string = "* * * * *"
 
@@ -28,14 +28,13 @@ scheduler_jobs = [
         "args": ["delete"],
         "depends_on": "run_urls_parser_update",
     },
-    # details
+    # history
     {
-        "func": run_details_parser,
+        "func": run_history_parser,
         "cron_string": cron_string,
         "args": None,
         "depends_on": "run_urls_parser_delete",
     },
-
 ]
 
 

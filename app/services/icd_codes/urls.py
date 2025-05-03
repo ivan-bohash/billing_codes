@@ -2,18 +2,18 @@ import arrow
 from arrow import Arrow
 from typing import Type, Callable
 
-from sqlalchemy.orm import Session, class_mapper
+from sqlalchemy.orm import Session
 
 from app.db.models.pagination import PaginationBaseModel
 from app.db.models.url import UrlsBaseModel
-from app.db.models.detail import DetailsBaseModel
+from app.db.models.history import HistoryBaseModel
 
 
 class UrlsService:
     """
     Service responsible for updating, creating records
 
-    and deleting urls with associated details in the database
+    and deleting urls with associated history in the database
 
     """
 
@@ -23,7 +23,7 @@ class UrlsService:
             pagination_model: Type[PaginationBaseModel],
             urls_model: Type[UrlsBaseModel],
             opposite_urls_model: Type[UrlsBaseModel],
-            details_model: Type[DetailsBaseModel],
+            history_model: Type[HistoryBaseModel],
             fetch_method: Callable
     ) -> None:
 
@@ -32,7 +32,7 @@ class UrlsService:
         :param pagination_model: model that stores pagination links
         :param urls_model: model that stores urls and icd_codes
         :param opposite_urls_model: opposite model to check records
-        :param details_model: model that stores ICD detailed information
+        :param history_model: model that stores ICD code history
         :param fetch_method: async method to fetch data
 
         """
@@ -41,7 +41,7 @@ class UrlsService:
         self.pagination_model: Type[PaginationBaseModel] = pagination_model
         self.urls_model: Type[UrlsBaseModel] = urls_model
         self.opposite_urls_model: Type[UrlsBaseModel] = opposite_urls_model
-        self.details_model: Type[DetailsBaseModel] = details_model
+        self.history_model: Type[HistoryBaseModel] = history_model
         self.fetch_method: Callable = fetch_method
         self.updated_at: Arrow = arrow.utcnow()
 
@@ -103,17 +103,17 @@ class UrlsService:
                     for icd in fetched_data
                 ]
 
-                self.db.bulk_update_mappings(class_mapper(self.urls_model), data)
+                self.db.bulk_update_mappings(self.urls_model, data)
                 self.db.commit()
 
-                print(f"{self.urls_model.__name__}: {len(data)} updated elements")
+                print(f"{self.urls_model.__name__}: {len(data)} updated records")
 
         add_new()
         update()
 
     def delete_urls(self) -> None:
         """
-        Delete outdated ICD from database and remove ICD from details model
+        Delete outdated ICD from database and remove ICD from history model
 
         :return: None
 
@@ -127,18 +127,17 @@ class UrlsService:
             for url in urls_to_delete:
                 self.db.delete(url)
 
-            # delete ICD from details model
+            # delete ICD from history model
             urls_icd_code = [url.icd_code for url in urls_to_delete]
 
             for icd_code in urls_icd_code:
-                detail = self.db.query(self.details_model).filter(
-                    self.details_model.icd_code == icd_code).one_or_none()
+                detail = self.db.query(self.history_model).filter(
+                    self.history_model.icd_code == icd_code).one_or_none()
 
                 self.db.delete(detail)
 
             self.db.commit()
 
-            print(f"{self.urls_model.__name__}, {self.details_model.__name__}: deleted {len(urls_to_delete)} elements")
+            print(f"{self.urls_model.__name__}, {self.history_model.__name__}: {len(urls_to_delete)} deleted records")
 
-        print(f"{self.urls_model.__name__}, {self.details_model.__name__}: no records to delete")
-
+        print(f"{self.urls_model.__name__}, {self.history_model.__name__}: no records to delete")

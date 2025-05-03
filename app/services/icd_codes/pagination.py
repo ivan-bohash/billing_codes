@@ -55,7 +55,7 @@ class PaginationService:
         if new_pagination:
             self.db.add_all(new_pagination)
             self.db.commit()
-            print(f"{self.pagination_model.__name__}: {len(new_pagination)} added elements")
+            print(f"{self.pagination_model.__name__}: {len(new_pagination)} added records")
 
     def update_pagination(self) -> None:
         """
@@ -86,6 +86,7 @@ class PaginationService:
             for data in data_to_delete:
                 self.db.delete(data)
 
+            print(f"{self.pagination_model.__name__}: {len(data_to_delete)} deleted records")
         self.db.commit()
 
     def run(self) -> None:

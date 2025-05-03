@@ -1,5 +1,4 @@
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Column, String
 
 from app.db.init_db import Base
 from app.db.models.abstract import MainMixin
@@ -13,8 +12,8 @@ class UrlsBaseModel(Base, MainMixin):
 
     __abstract__ = True
 
-    icd_code: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    url: Mapped[str] = mapped_column(String, nullable=False)
+    icd_code: Column[String] = Column(String, index=True, nullable=False)
+    url: Column[String] = Column(String, nullable=False)
 
     def __repr__(self):
         return self._repr(

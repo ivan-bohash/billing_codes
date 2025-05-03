@@ -1,5 +1,4 @@
-from sqlalchemy import Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Column, Integer
 from sqlalchemy_utils import ArrowType
 import arrow
 from arrow import Arrow
@@ -13,9 +12,9 @@ class MainMixin:
 
     default_time: Arrow = arrow.utcnow()
 
-    id: Mapped[int] = mapped_column(Integer, doc="ID", primary_key=True)
-    created_at: Mapped[Arrow] = mapped_column(ArrowType, doc="Created At", default=default_time, nullable=False)
-    updated_at: Mapped[Arrow] = mapped_column(ArrowType, doc="Updated At", default=default_time, nullable=False)
+    id: Column[Integer] = Column(Integer, doc="ID", primary_key=True)
+    created_at: Column[Arrow] = Column(ArrowType, doc="Created At", default=default_time, nullable=False)
+    updated_at: Column[Arrow] = Column(ArrowType, doc="Updated At", default=default_time, nullable=False)
 
     # custom repr method
     def _repr(self, **kwargs):
