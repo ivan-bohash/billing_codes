@@ -108,4 +108,3 @@ def run_pagination_parser() -> None:
 
     non_billable_parser.manage_pagination()
     billable_parser.manage_pagination()
-

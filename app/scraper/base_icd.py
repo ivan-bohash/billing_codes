@@ -10,14 +10,14 @@ class BaseICD(metaclass=ABCMeta):
     @staticmethod
     async def exception_handler(e: Exception) -> None:
         """
-        Logs exception and delays execution for 1 minute before retrying
+        Logs exception and delays execution
 
         :param e: Exception
         :return: None
 
         """
 
-        print(f"Exception: {e}.\nSleep 1 min before next execution.")
+        print(f"Exception: {e}.\nSleep 60 seconds before next execution.")
         await asyncio.sleep(60)
 
     @abstractmethod

@@ -11,7 +11,7 @@ from app.services.icd_codes.urls import UrlsService
 
 from app.db.models.pagination import PaginationBaseModel, PaginationBillModel, PaginationNonBillModel
 from app.db.models.url import UrlsBaseModel, UrlsBillModel, UrlsNonBillModel
-from app.db.models.detail import DetailsBaseModel, DetailsBillModel, DetailsNonBillModel
+from app.db.models.history import HistoryBaseModel, HistoryBillModel, HistoryNonBillModel
 
 
 class UrlParser(BaseICD):
@@ -25,13 +25,13 @@ class UrlParser(BaseICD):
             pagination_model: Type[PaginationBaseModel],
             urls_model: Type[UrlsBaseModel],
             opposite_urls_model: Type[UrlsBaseModel],
-            details_model: Type[DetailsBaseModel]
+            history_model: Type[HistoryBaseModel]
     ) -> None:
         """
         :param pagination_model: pagination model
         :param urls_model: current url model
         :param opposite_urls_model: url model for opposite category
-        :param details_model: model for detailed information
+        :param history_model: model for history information
 
         """
 
@@ -39,7 +39,7 @@ class UrlParser(BaseICD):
         self.pagination_model: Type[PaginationBaseModel] = pagination_model
         self.urls_model: Type[UrlsBaseModel] = urls_model
         self.opposite_urls_model: Type[UrlsBaseModel] = opposite_urls_model
-        self.details_model: Type[DetailsBaseModel] = details_model
+        self.history_model: Type[HistoryBaseModel] = history_model
 
     async def get_icd_data(self, session: ClientSession, url: str) -> list[dict[str, str]]:
         """
@@ -92,7 +92,7 @@ class UrlParser(BaseICD):
                 pagination_model=self.pagination_model,
                 urls_model=self.urls_model,
                 opposite_urls_model=self.opposite_urls_model,
-                details_model=self.details_model,
+                history_model=self.history_model,
                 # method from BaseICD
                 fetch_method=self.main
             )
@@ -116,7 +116,7 @@ class UrlsNonBillable(UrlParser):
             pagination_model=PaginationNonBillModel,
             urls_model=UrlsNonBillModel,
             opposite_urls_model=UrlsBillModel,
-            details_model=DetailsNonBillModel
+            history_model=HistoryNonBillModel
         )
 
 
@@ -131,7 +131,7 @@ class UrlsBillable(UrlParser):
             pagination_model=PaginationBillModel,
             urls_model=UrlsBillModel,
             opposite_urls_model=UrlsNonBillModel,
-            details_model=DetailsBillModel,
+            history_model=HistoryBillModel,
         )
 
 
