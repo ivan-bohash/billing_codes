@@ -8,8 +8,7 @@ db_path = "sqlite:////home/ivan/Projects/icd_codes/data/icd_codes.db"
 # db_path = "sqlite:////app/data/icd_codes.db"
 
 engine = create_engine(
-    db_path,
-    connect_args={"check_same_thread": False},
+    db_path
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
