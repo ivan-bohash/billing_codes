@@ -157,6 +157,4 @@ def run_urls_parser(action: str) -> None:
         await non_billable_parser.manage_urls(action)
         await billable_parser.manage_urls(action)
 
-    result = asyncio.run(run_parsers())
-
-    return result
+    asyncio.run(run_parsers())

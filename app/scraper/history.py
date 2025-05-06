@@ -141,6 +141,4 @@ def run_history_parser() -> None:
         await non_billable_parser.manage_history()
         await billable_parser.manage_history()
 
-    result = asyncio.run(run_parsers())
-
-    return result
+    asyncio.run(run_parsers())
