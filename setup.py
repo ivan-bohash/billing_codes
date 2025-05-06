@@ -22,7 +22,7 @@ setup(
         "fastapi==0.115.8",
         "fastapi-cli==0.0.7",
         "greenlet==3.1.1",
-        "httpcore==1.0.7",
+        "httpcore==1.0.9",
         "httptools==0.6.4",
         "httpx==0.28.1",
         "idna==3.10",

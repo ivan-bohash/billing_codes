@@ -45,7 +45,11 @@ class HistoryParser(BaseICD):
         :rtype: list[dict]
 
         """
-        while True:
+
+        attempt = 1
+        max_attempt = 5
+
+        while attempt <= max_attempt:
             async with session.get(url=url, headers=self.headers) as response:
                 if response.status == 200:
                     icd_history = []
@@ -66,7 +70,7 @@ class HistoryParser(BaseICD):
                         if "effective" in data[i]:
                             temp_str += '{' + f"{data[i - 1]} {data[i]}{data[i + 1]}" + '}, '
                         elif "Revised code" in data[i]:
-                            temp_str = temp_str.strip()[:-2] + '.' + f" {data[i+1]}; {data[i+2]}" + '}, '
+                            temp_str = temp_str.strip()[:-2] + '.' + f" {data[i + 1]}; {data[i + 2]}" + '}, '
 
                     code_history = temp_str.strip()[:-1]
                     icd_history.append({"icd_code": icd_code, "code_history": code_history})
@@ -75,7 +79,10 @@ class HistoryParser(BaseICD):
 
                 else:
                     print(f"[{url.split('/')[-1]}] exception. Sleep 30 seconds")
+                    attempt += 1
                     await asyncio.sleep(30)
+
+        raise Exception("Max retries")
 
     async def manage_history(self) -> None:
         """
@@ -134,4 +141,6 @@ def run_history_parser() -> None:
         await non_billable_parser.manage_history()
         await billable_parser.manage_history()
 
-    asyncio.run(run_parsers())
+    result = asyncio.run(run_parsers())
+
+    return result

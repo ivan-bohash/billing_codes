@@ -53,7 +53,10 @@ class UrlParser(BaseICD):
 
         """
 
-        while True:
+        attempt = 1
+        max_attempt = 5
+
+        while attempt <= max_attempt:
             async with session.get(url=url, headers=self.headers) as response:
                 if response.status == 200:
                     base_urls = []
@@ -75,13 +78,16 @@ class UrlParser(BaseICD):
 
                 else:
                     print(f"[{url.split('/')[-1]}] exception: sleep 30 sec")
+                    attempt += 1
                     await asyncio.sleep(30)
 
-    async def manage_urls(self, task: str) -> None:
+        raise Exception("Max retries")
+
+    async def manage_urls(self, action: str) -> None:
         """
         Async method to manage tasks using UrlsManager
 
-        :param task: string describing task ("update" or "delete")
+        :param action: string describing action (task) ("update" or "delete")
         :return: None
 
         """
@@ -97,9 +103,9 @@ class UrlParser(BaseICD):
                 fetch_method=self.main
             )
 
-            if task == "update":
+            if action == "update":
                 await url_service.update_urls()
-            elif task == "delete":
+            elif action == "delete":
                 url_service.delete_urls()
             else:
                 raise ValueError("Unknown task")
@@ -135,11 +141,11 @@ class UrlsBillable(UrlParser):
         )
 
 
-def run_urls_parser(task: str) -> None:
+def run_urls_parser(action: str) -> None:
     """
     Pass task and run billable and non-billable parsers
 
-    :param task: Task to run ("update" to fetch and add new ICD, "delete" to remove outdated ICD)
+    :param action: Task to run ("update" to fetch and add new ICD, "delete" to remove outdated ICD)
     :return: None
 
     """
@@ -148,7 +154,9 @@ def run_urls_parser(task: str) -> None:
     billable_parser = UrlsBillable()
 
     async def run_parsers():
-        await non_billable_parser.manage_urls(task)
-        await billable_parser.manage_urls(task)
+        await non_billable_parser.manage_urls(action)
+        await billable_parser.manage_urls(action)
 
-    asyncio.run(run_parsers())
+    result = asyncio.run(run_parsers())
+
+    return result

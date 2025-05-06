@@ -1,5 +1,6 @@
 /about/
 /data/
+/airflow/
 .idea/
 __pycache__/
 
