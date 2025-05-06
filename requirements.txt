@@ -8,7 +8,7 @@ alembic==1.15.2
 amqp==5.3.1
 annotated-types==0.7.0
 anyio==4.8.0
-apache-airflow==2.9.1
+apache-airflow==2.10.3
 apache-airflow-providers-common-compat==1.6.1
 apache-airflow-providers-common-io==1.5.4
 apache-airflow-providers-common-sql==1.26.0
@@ -16,7 +16,6 @@ apache-airflow-providers-fab==1.5.3
 apache-airflow-providers-ftp==3.12.3
 apache-airflow-providers-http==5.2.2
 apache-airflow-providers-imap==3.8.3
-apache-airflow-providers-postgres==6.1.3
 apache-airflow-providers-smtp==2.0.3
 apache-airflow-providers-sqlite==4.0.2
 apispec==6.8.1
@@ -28,12 +27,10 @@ async-timeout==5.0.1
 asyncpg==0.30.0
 attrs==25.1.0
 babel==2.17.0
-backports-datetime-fromisoformat==2.0.3
 backports.strenum==1.3.1
 billiard==4.2.1
 blinker==1.8.1
 cachelib==0.9.0
-cadwyn==5.3.3
 celery==5.5.1
 certifi==2025.1.31
 cffi==1.17.1
@@ -63,22 +60,21 @@ fastapi==0.115.8
 fastapi-cli==0.0.7
 fastjsonschema==2.21.1
 Flask==2.2.5
-Flask-AppBuilder==4.6.2
+Flask-AppBuilder==4.5.3
 Flask-Babel==2.0.0
-Flask-Caching==2.2.0
+Flask-Caching==2.3.1
 Flask-JWT-Extended==4.7.1
 Flask-Limiter==3.12
 Flask-Login==0.6.3
 Flask-Session==0.5.0
 Flask-SQLAlchemy==2.5.1
 Flask-WTF==1.2.2
-flower==2.0.1
 freezegun==1.5.1
 frozenlist==1.5.0
 fsspec==2025.3.2
 gitdb==4.0.12
 GitPython==3.1.44
-google-re2==1.1.20240501
+google-re2==1.1.20240702
 googleapis-common-protos==1.70.0
 graphviz==0.20.3
 greenlet==3.1.1
@@ -89,7 +85,7 @@ httpcore==1.0.9
 httptools==0.6.4
 httpx==0.28.1
 humanize==4.12.2
--e git+https://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@github.com/ivan-bohash/icd_codes.git@6dcc4f027a7fd04f2586a82d1fa12f52e5c69cc4#egg=icd_codes
+-e git+https://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@github.com/ivan-bohash/icd_codes.git@2dd2432fa829627024e858c82c8f536274e5a29b#egg=icd_codes
 idna==3.10
 importlib_metadata==8.4.0
 importlib_resources==6.4.0
@@ -112,7 +108,7 @@ markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 marshmallow==3.18.0
 marshmallow-oneofschema==3.1.1
-marshmallow-sqlalchemy==1.4.2
+marshmallow-sqlalchemy==0.28.2
 mdit-py-plugins==0.4.0
 mdurl==0.1.2
 methodtools==0.4.7
@@ -151,8 +147,6 @@ pydantic-settings==2.9.1
 pydantic_core==2.33.2
 Pygments==2.19.1
 PyJWT==2.10.1
-pytest==8.3.5
-pytest-base-url==2.1.0
 python-daemon==3.1.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
@@ -191,7 +185,6 @@ tabulate==0.9.0
 tenacity==9.1.2
 termcolor==3.0.1
 text-unidecode==1.3
-time-machine==2.14.1
 tomli==2.2.1
 tornado==6.4.2
 typer==0.15.1
@@ -199,10 +192,9 @@ types-python-dateutil==2.9.0.20241206
 types-requests==2.32.0.20250328
 types-urllib3==1.26.25.14
 typing-inspection==0.4.0
-typing_extensions==4.12.2
+typing_extensions==4.13.2
 tzdata==2025.2
 uc-micro-py==1.0.3
-unicodecsv==0.14.1
 universal_pathlib==0.2.6
 urllib3==2.3.0
 uuid6==2024.7.10
@@ -216,6 +208,5 @@ Werkzeug==2.2.3
 wirerope==1.0.0
 wrapt==1.17.2
 WTForms==3.2.1
-yarg==0.1.9
 yarl==1.18.3
 zipp==3.21.0

@@ -1,6 +1,5 @@
 README.md
 setup.py
-airflow/__init__.py
 app/__init__.py
 app/config.py
 app/main.py

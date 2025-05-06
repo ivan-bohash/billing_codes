@@ -1,4 +1,3 @@
-import requests
 import aiohttp
 import asyncio
 from lxml import html
@@ -128,3 +127,6 @@ def run_pagination_parser() -> None:
         await billable_parser.manage_pagination()
 
     asyncio.run(run_pagination())
+
+
+run_pagination_parser()
