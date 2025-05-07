@@ -1,7 +1,6 @@
 import asyncio
 from lxml import html
 from typing import Type
-
 from aiohttp import ClientSession
 
 from app.config import settings

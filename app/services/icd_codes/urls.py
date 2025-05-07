@@ -68,7 +68,10 @@ class UrlsService:
             """
 
             # get all icd codes from urls model
-            db_icd_codes = {data.icd_code for data in self.db.query(self.urls_model.icd_code).all()}
+            db_icd_codes = {
+                data.icd_code
+                for data in self.db.query(self.urls_model.icd_code).all()
+            }
             new_icd_codes = []
 
             for data in fetched_data:
@@ -96,17 +99,16 @@ class UrlsService:
                 for url in self.db.query(self.urls_model).all()
             }
 
-            if db_urls:
-                # update only existing in database records
-                data = [
-                    {"id": db_urls.get(icd["icd_code"]), "updated_at": self.updated_at}
-                    for icd in fetched_data
-                ]
+            # update only existing in database records
+            data = [
+                {"id": db_urls.get(icd["icd_code"]), "updated_at": self.updated_at}
+                for icd in fetched_data
+            ]
 
-                self.db.bulk_update_mappings(self.urls_model, data)
-                self.db.commit()
+            self.db.bulk_update_mappings(self.urls_model, data)
+            self.db.commit()
 
-                print(f"{self.urls_model.__name__}: {len(data)} updated records")
+            print(f"{self.urls_model.__name__}: {len(data)} updated records")
 
         add_new()
         update()
@@ -119,9 +121,10 @@ class UrlsService:
 
         """
 
-        urls_to_delete = self.db.query(self.urls_model).filter(
-            self.urls_model.updated_at != self.updated_at).filter(
-            self.urls_model.icd_code.in_(self.db.query(self.opposite_urls_model.icd_code))).all()
+        urls_to_delete = (self.db.query(self.urls_model).
+                          filter(self.urls_model.updated_at != self.updated_at).
+                          filter(self.urls_model.icd_code.in_(self.db.query(self.opposite_urls_model.icd_code))).
+                          all())
 
         if urls_to_delete:
             for url in urls_to_delete:
