@@ -130,17 +130,6 @@ class UrlsService:
             for url in urls_to_delete:
                 self.db.delete(url)
 
-            # delete ICD from history model
-            urls_icd_code = [url.icd_code for url in urls_to_delete]
-
-            for icd_code in urls_icd_code:
-                detail = self.db.query(self.history_model).filter(
-                    self.history_model.icd_code == icd_code).one_or_none()
-
-                self.db.delete(detail)
-
-            self.db.commit()
-
             print(f"{self.urls_model.__name__}, {self.history_model.__name__}: {len(urls_to_delete)} deleted records")
 
         print(f"{self.urls_model.__name__}, {self.history_model.__name__}: no records to delete")

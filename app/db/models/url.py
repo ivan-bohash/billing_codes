@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String
+from sqlalchemy.orm import relationship
 
 from app.db.init_db import Base
 from app.db.models.abstract import MainMixin
@@ -37,6 +38,13 @@ class UrlsBillModel(UrlsBaseModel):
 
     __tablename__ = "urls_billable"
 
+    history = relationship(
+        "HistoryBillModel",
+        back_populates="url",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
 
 class UrlsNonBillModel(UrlsBaseModel):
     """
@@ -45,3 +53,10 @@ class UrlsNonBillModel(UrlsBaseModel):
     """
 
     __tablename__ = "urls_non_billable"
+
+    history = relationship(
+        "HistoryNonBillModel",
+        back_populates="url",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
