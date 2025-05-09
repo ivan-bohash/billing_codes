@@ -56,8 +56,18 @@ class HistoryService:
             # fetch new icd code history
             icd_history = await self.fetch_method(urls=urls)
 
+            # create dict to have access to urls.id
+            urls_id = {
+                new_icd.icd_code: new_icd.id
+                for new_icd in new_icd_codes
+            }
+
             new_history = [
-                self.history_model(icd_code=icd["icd_code"], code_history=icd["code_history"])
+                self.history_model(
+                    icd_code=icd["icd_code"],
+                    code_history=icd["code_history"],
+                    url_id=urls_id.get(icd["icd_code"])
+                )
                 for icd in icd_history
             ]
 

@@ -7,7 +7,7 @@ from app.db.models.abstract import MainMixin
 
 class HistoryBaseModel(Base, MainMixin):
     """
-     Base model for Billable and Non-billable code history
+    Base model for Billable and Non-billable code history
 
     """
 
