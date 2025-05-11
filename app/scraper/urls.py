@@ -110,37 +110,7 @@ class UrlParser(BaseICD):
                 raise ValueError("Unknown task")
 
 
-class UrlsNonBillable(UrlParser):
-    """
-    Parser for non-billable ICD
-
-    """
-
-    def __init__(self) -> None:
-        super().__init__(
-            pagination_model=PaginationNonBillModel,
-            urls_model=UrlsNonBillModel,
-            opposite_urls_model=UrlsBillModel,
-            history_model=HistoryNonBillModel
-        )
-
-
-class UrlsBillable(UrlParser):
-    """
-    Parser for billable ICD
-
-    """
-
-    def __init__(self) -> None:
-        super().__init__(
-            pagination_model=PaginationBillModel,
-            urls_model=UrlsBillModel,
-            opposite_urls_model=UrlsNonBillModel,
-            history_model=HistoryBillModel,
-        )
-
-
-def run_urls_parser(action: str) -> None:
+def run_url_parsers(action: str) -> None:
     """
     Pass task and run billable and non-billable parsers
 
@@ -149,11 +119,23 @@ def run_urls_parser(action: str) -> None:
 
     """
 
-    non_billable_parser = UrlsNonBillable()
-    billable_parser = UrlsBillable()
+    non_billable_parser = UrlParser(
+        pagination_model=PaginationNonBillModel,
+        urls_model=UrlsNonBillModel,
+        opposite_urls_model=UrlsBillModel,
+        history_model=HistoryNonBillModel
+    )
+
+    billable_parser = UrlParser(
+        pagination_model=PaginationBillModel,
+        urls_model=UrlsBillModel,
+        opposite_urls_model=UrlsNonBillModel,
+        history_model=HistoryBillModel
+    )
 
     async def run_parsers():
         await non_billable_parser.manage_urls(action)
         await billable_parser.manage_urls(action)
 
     asyncio.run(run_parsers())
+

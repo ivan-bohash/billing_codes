@@ -85,33 +85,7 @@ class PaginationParser:
             pagination_service.run()
 
 
-class PaginationNonBillable(PaginationParser):
-    """
-    Parser for non-billable ICD
-
-    """
-
-    def __init__(self) -> None:
-        super().__init__(
-            base_url=settings.non_billable_url,
-            pagination_model=PaginationNonBillModel
-        )
-
-
-class PaginationBillable(PaginationParser):
-    """
-    Parser for billable ICD
-
-    """
-
-    def __init__(self) -> None:
-        super().__init__(
-            base_url=settings.billable_url,
-            pagination_model=PaginationBillModel
-        )
-
-
-def run_pagination_parser() -> None:
+def run_pagination_parsers() -> None:
     """
     Run billable and non-billable parsers
 
@@ -119,8 +93,15 @@ def run_pagination_parser() -> None:
 
     """
 
-    non_billable_parser = PaginationNonBillable()
-    billable_parser = PaginationBillable()
+    non_billable_parser = PaginationParser(
+        base_url=settings.non_billable_url,
+        pagination_model=PaginationNonBillModel
+    )
+
+    billable_parser = PaginationParser(
+        base_url=settings.billable_url,
+        pagination_model=PaginationBillModel
+    )
 
     async def run_pagination():
         await non_billable_parser.manage_pagination()

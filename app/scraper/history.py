@@ -94,39 +94,14 @@ class HistoryParser(BaseICD):
                 db=db,
                 urls_model=self.urls_model,
                 history_model=self.history_model,
+                # method from BaseICD
                 fetch_method=self.main
             )
 
             await history_service.run()
 
 
-class HistoryNonBillable(HistoryParser):
-    """
-    Parser for non-billable ICD
-
-    """
-
-    def __init__(self) -> None:
-        super().__init__(
-            urls_model=UrlsNonBillModel,
-            history_model=HistoryNonBillModel
-        )
-
-
-class HistoryBillable(HistoryParser):
-    """
-    Parser for billable ICD
-
-    """
-
-    def __init__(self) -> None:
-        super().__init__(
-            urls_model=UrlsBillModel,
-            history_model=HistoryBillModel
-        )
-
-
-def run_history_parser() -> None:
+def run_history_parsers() -> None:
     """
     Method to run non-billable and billable parsers
 
@@ -134,8 +109,15 @@ def run_history_parser() -> None:
 
     """
 
-    non_billable_parser = HistoryNonBillable()
-    billable_parser = HistoryBillable()
+    non_billable_parser = HistoryParser(
+        urls_model=UrlsNonBillModel,
+        history_model=HistoryNonBillModel
+    )
+
+    billable_parser = HistoryParser(
+        urls_model=UrlsBillModel,
+        history_model=HistoryBillModel
+    )
 
     async def run_parsers():
         await non_billable_parser.manage_history()
