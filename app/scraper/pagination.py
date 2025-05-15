@@ -53,10 +53,7 @@ class PaginationParser:
                             [0].split('/')[-1]
                         )
 
-                        # create list of URLs
-                        urls: list[str] = [f"{self.base_url}{i}" for i in range(1, last_index + 1)]
-
-                        return urls
+                        return [f"{self.base_url}{i}" for i in range(1, last_index + 1)]
                     else:
                         print(f"[{self.base_url.split('/')[-2]}] exception: sleep 30 sec")
                         attempt += 1
