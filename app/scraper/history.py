@@ -52,7 +52,7 @@ class HistoryParser(BaseICD):
         while attempt <= max_attempt:
             async with session.get(url=url, headers=self.headers) as response:
                 if response.status == 200:
-                    icd_history = []
+                    result = []
                     response_html = await response.text()
                     tree = html.fromstring(response_html)
 
@@ -73,9 +73,9 @@ class HistoryParser(BaseICD):
                             temp_str = temp_str.strip()[:-2] + '.' + f" {data[i + 1]}; {data[i + 2]}" + '}, '
 
                     code_history = temp_str.strip()[:-1]
-                    icd_history.append({"icd_code": icd_code, "code_history": code_history})
+                    result.append({"icd_code": icd_code, "code_history": code_history})
 
-                    return icd_history
+                    return result
 
                 else:
                     print(f"[{url.split('/')[-1]}] exception. Sleep 30 seconds")

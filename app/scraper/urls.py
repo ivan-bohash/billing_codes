@@ -58,7 +58,7 @@ class UrlParser(BaseICD):
         while attempt <= max_attempt:
             async with session.get(url=url, headers=self.headers) as response:
                 if response.status == 200:
-                    base_urls = []
+                    result = []
                     response_html = await response.text()
                     tree = html.fromstring(response_html)
 
@@ -68,12 +68,12 @@ class UrlParser(BaseICD):
                     )
 
                     for href in icd_hrefs:
-                        base_urls.append({
+                        result.append({
                             "icd_code": href.split('/')[-1],
                             "url": f'https://www.icd10data.com{href}'
                         })
 
-                    return base_urls
+                    return result
 
                 else:
                     print(f"[{url.split('/')[-1]}] exception: sleep 30 sec")
