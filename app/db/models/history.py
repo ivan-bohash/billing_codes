@@ -15,23 +15,20 @@ class HistoryBaseModel(Base, MainMixin):
     __abstract__ = True
 
     icd_code: Column[String] = Column(String, index=True, nullable=False)
-    code_history: Column[String] = Column(String, nullable=False)
     history: Column = Column(JSONB)
 
     def __repr__(self):
         return self._repr(
             id=self.id,
             icd_code=self.icd_code,
-            code_history=self.code_history,
             history=self.history,
             created_at=self.created_at,
             updated_at=self.updated_at,
             url_id=self.url_id,
         )
 
-    def __init__(self, icd_code, code_history, history, url_id):
+    def __init__(self, icd_code, history, url_id):
         self.icd_code = icd_code
-        self.code_history = code_history
         self.history = history
         self.url_id = url_id
 

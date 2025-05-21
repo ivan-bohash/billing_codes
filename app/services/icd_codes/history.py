@@ -65,7 +65,7 @@ class HistoryService:
             new_history = [
                 self.history_model(
                     icd_code=icd["icd_code"],
-                    code_history=icd["code_history"],
+                    history=icd["code_history"],
                     url_id=urls_id.get(icd["icd_code"])
                 )
                 for icd in icd_history

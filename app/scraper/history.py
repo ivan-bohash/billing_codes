@@ -53,36 +53,56 @@ class HistoryParser(BaseICD):
             async with session.get(url=url, headers=self.headers) as response:
                 if response.status == 200:
                     result = []
+                    history = []
                     response_html = await response.text()
                     tree = html.fromstring(response_html)
 
                     icd_code = url.split('/')[-1]
 
                     # code history
-                    history = tree.xpath(
+                    code_history = tree.xpath(
                         '//div[@class="body-content"]//span[text()="Code History"]/following::ul[1]//text()'
                     )
-                    data = [item.strip() for item in history if item.strip()]
-
-                    temp_str = ''
+                    data = [item.strip() for item in code_history if item.strip()]
 
                     for i in range(0, len(data)):
                         if "effective" in data[i]:
-                            temp_str += '{' + f"{data[i - 1]} {data[i]}{data[i + 1]}" + '}, '
-                        elif "Revised code" in data[i]:
-                            temp_str = temp_str.strip()[:-2] + '.' + f" {data[i + 1]}; {data[i + 2]}" + '}, '
+                            year = data[i-1]
+                            effective_date = data[i].split()[1][:-1]
+                            description = data[i+1][2:]
 
-                    code_history = temp_str.strip()[:-1]
-                    result.append({"icd_code": icd_code, "code_history": code_history})
+                            result_dict = {
+                                "year": year,
+                                "effective_date": effective_date,
+                                "description": description
+                            }
+
+                            history.append(result_dict)
+
+                        # if revised - modify result_dict["description"]
+                        elif "Revised code" in data[i]:
+                            revised_code = data[i].split(': ')[1]
+                            # split revised data
+                            new_description = data[i + 1].split(': ')
+                            old_description = data[i + 2].split(': ')
+
+                            revised_data = {
+                                new_description[0]: new_description[1],
+                                old_description[0]: old_description[1]
+                            }
+
+                            # change description
+                            result_dict["description"] = {
+                                revised_code: revised_data
+                            }
+                    result.append({"icd_code": icd_code, "history": history})
 
                     return result
-
                 else:
                     print(f"[{url.split('/')[-1]}] exception. Sleep 30 seconds")
                     attempt += 1
                     await asyncio.sleep(30)
-
-        raise Exception("Max retries")
+            raise Exception("Max retries")
 
     async def manage_history(self) -> None:
         """
