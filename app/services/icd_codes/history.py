@@ -1,9 +1,11 @@
 import arrow
 from arrow import Arrow
-from typing import Type, Callable
+from typing import Type, Callable, Any
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.db.models.url import UrlsBaseModel
 from app.db.models.history import HistoryBaseModel
 
@@ -20,7 +22,7 @@ class HistoryService:
             self,
             db: Session,
             urls_model: Type[UrlsBaseModel],
-            history_model: Type[HistoryBaseModel],
+            history_model: Type[HistoryBaseModel] | Any,
             fetch_method: Callable
     ):
         """
@@ -33,7 +35,7 @@ class HistoryService:
 
         self.db: Session = db
         self.urls_model: Type[UrlsBaseModel] = urls_model
-        self.history_model: Type[HistoryBaseModel] = history_model
+        self.history_model: Type[HistoryBaseModel] | Any = history_model
         self.fetch_method: Callable = fetch_method
         self.updated_at: Arrow = arrow.utcnow()
 
@@ -83,15 +85,30 @@ class HistoryService:
 
         """
 
-        # list with updated fields
-        data = [
-            {"id": icd.id, "updated_at": self.updated_at}
-            for icd in self.db.query(self.history_model).all()
-        ]
+        count = 0
 
-        self.db.bulk_update_mappings(self.history_model, data)
+        obj_stream = self.db.execute(
+            select(self.history_model).order_by(self.history_model.id),
+            execution_options={"stream_results": True}
+        )
+
+        while True:
+            obj_partition = obj_stream.scalars().fetchmany(settings.DATA_PARTITION)
+
+            if not obj_partition:
+                break
+
+            # list with updated fields
+            data = [
+                {"id": obj.id, "updated_at": self.updated_at}
+                for obj in obj_partition
+            ]
+
+            count += len(data)
+            self.db.bulk_update_mappings(self.history_model, data)
+
         self.db.commit()
-        print(f"{self.history_model.__name__}: {len(data)} updated records")
+        print(f"{self.history_model.__name__}: {count} updated records")
 
     async def run(self) -> None:
         """
@@ -103,5 +120,3 @@ class HistoryService:
 
         await self.add_history()
         self.update_history()
-
-

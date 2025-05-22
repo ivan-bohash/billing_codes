@@ -19,6 +19,8 @@ class Settings(BaseSettings):
         "Sec-Fetch-User": "?1"
     }
 
+    DATA_PARTITION: int = 200
+
     billable_url: str = "https://www.icd10data.com/ICD10CM/Codes/Rules/Billable_Specific_Codes/"
     non_billable_url: str = "https://www.icd10data.com/ICD10CM/Codes/Rules/Non_Billable_Specific_Codes/"
 

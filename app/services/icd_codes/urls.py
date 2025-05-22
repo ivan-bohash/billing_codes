@@ -1,9 +1,11 @@
 import arrow
 from arrow import Arrow
-from typing import Type, Callable
+from typing import Type, Callable, Any
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.db.models.pagination import PaginationBaseModel
 from app.db.models.url import UrlsBaseModel
 from app.db.models.history import HistoryBaseModel
@@ -21,7 +23,7 @@ class UrlsService:
             self,
             db: Session,
             pagination_model: Type[PaginationBaseModel],
-            urls_model: Type[UrlsBaseModel],
+            urls_model: Type[UrlsBaseModel] | Any,
             opposite_urls_model: Type[UrlsBaseModel],
             history_model: Type[HistoryBaseModel],
             fetch_method: Callable
@@ -39,7 +41,7 @@ class UrlsService:
 
         self.db: Session = db
         self.pagination_model: Type[PaginationBaseModel] = pagination_model
-        self.urls_model: Type[UrlsBaseModel] = urls_model
+        self.urls_model: Type[UrlsBaseModel] | Any = urls_model
         self.opposite_urls_model: Type[UrlsBaseModel] = opposite_urls_model
         self.history_model: Type[HistoryBaseModel] = history_model
         self.fetch_method: Callable = fetch_method
@@ -67,15 +69,27 @@ class UrlsService:
 
             """
 
-            # get all icd codes from urls model
-            db_icd_codes = {
-                data.icd_code
-                for data in self.db.query(self.urls_model.icd_code).all()
-            }
+            db_icd_codes = set()
+
+            # get icd codes from db
+            obj_stream = self.db.execute(
+                select(self.urls_model.icd_code).order_by(self.urls_model.id),
+                execution_options={"stream_results": True}
+            )
+
+            # get icd codes from urls model
+            while True:
+                obj_partition = obj_stream.scalars().fetchmany(settings.DATA_PARTITION)
+
+                if not obj_partition:
+                    break
+
+                db_icd_codes.update(obj_partition)
+
             new_icd_codes = []
 
             for data in fetched_data:
-                # add only if icd doesn't exist in database
+                # add if not exist in db
                 if data["icd_code"] not in db_icd_codes:
                     icd = self.urls_model(icd_code=data["icd_code"], url=data["url"])
                     new_icd_codes.append(icd)
@@ -93,13 +107,24 @@ class UrlsService:
 
             """
 
-            # create dict from urls model
-            db_urls = {
-                url.icd_code: url.id
-                for url in self.db.query(self.urls_model).all()
-            }
+            db_urls = {}
 
-            # update only existing in database records
+            obj_stream = self.db.execute(
+                select(self.urls_model).order_by(self.urls_model.id),
+                execution_options={"stream_results": True}
+            )
+
+            # create dict from urls model
+            while True:
+                obj_partition = obj_stream.scalars().fetchmany(settings.DATA_PARTITION)
+
+                if not obj_partition:
+                    break
+
+                for obj in obj_partition:
+                    db_urls[obj.icd_code] = obj.id
+
+            # update only existing records
             data = [
                 {"id": db_urls.get(icd["icd_code"]), "updated_at": self.updated_at}
                 for icd in fetched_data
