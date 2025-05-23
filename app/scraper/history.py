@@ -11,6 +11,7 @@ from app.services.icd_codes.history import HistoryService
 
 from app.db.models.url import UrlsBaseModel, UrlsBillModel, UrlsNonBillModel
 from app.db.models.history import HistoryBaseModel, HistoryBillModel, HistoryNonBillModel
+from app.services.icd_codes.retry_decorator import retry
 
 
 class HistoryParser(BaseICD):
@@ -34,6 +35,7 @@ class HistoryParser(BaseICD):
         self.urls_model: Type[UrlsBaseModel] = urls_model
         self.history_model: Type[HistoryBaseModel] = history_model
 
+    @retry(max_attempts=5, delay=30)
     async def get_icd_data(self, session: ClientSession, url: str) -> list[dict[str, str]]:
         """
         Method to fetch code history from given URL
@@ -46,65 +48,59 @@ class HistoryParser(BaseICD):
 
         """
 
-        attempt = 1
-        max_attempt = 5
+        async with session.get(url=url, headers=self.headers) as response:
+            if response.status == 200:
+                result = []
+                history = []
+                response_html = await response.text()
+                tree = html.fromstring(response_html)
 
-        while attempt <= max_attempt:
-            async with session.get(url=url, headers=self.headers) as response:
-                if response.status == 200:
-                    result = []
-                    history = []
-                    response_html = await response.text()
-                    tree = html.fromstring(response_html)
+                icd_code = url.split('/')[-1]
 
-                    icd_code = url.split('/')[-1]
+                # code history
+                code_history = tree.xpath(
+                    '//div[@class="body-content"]//span[text()="Code History"]/following::ul[1]//text()'
+                )
+                data = [item.strip() for item in code_history if item.strip()]
 
-                    # code history
-                    code_history = tree.xpath(
-                        '//div[@class="body-content"]//span[text()="Code History"]/following::ul[1]//text()'
-                    )
-                    data = [item.strip() for item in code_history if item.strip()]
+                for i in range(0, len(data)):
+                    if "effective" in data[i]:
+                        year = data[i - 1]
+                        effective_date = data[i].split()[1][:-1]
+                        description = data[i + 1][2:]
 
-                    for i in range(0, len(data)):
-                        if "effective" in data[i]:
-                            year = data[i-1]
-                            effective_date = data[i].split()[1][:-1]
-                            description = data[i+1][2:]
+                        result_dict = {
+                            "year": year,
+                            "effective_date": effective_date,
+                            "description": description
+                        }
 
-                            result_dict = {
-                                "year": year,
-                                "effective_date": effective_date,
-                                "description": description
-                            }
+                        history.append(result_dict)
 
-                            history.append(result_dict)
+                    # if revised - modify result_dict["description"]
+                    elif "Revised code" in data[i]:
+                        revised_code = data[i].split(': ')[1]
+                        # split revised data
+                        new_description = data[i + 1].split(': ')
+                        old_description = data[i + 2].split(': ')
 
-                        # if revised - modify result_dict["description"]
-                        elif "Revised code" in data[i]:
-                            revised_code = data[i].split(': ')[1]
-                            # split revised data
-                            new_description = data[i + 1].split(': ')
-                            old_description = data[i + 2].split(': ')
+                        revised_data = {
+                            new_description[0]: new_description[1],
+                            old_description[0]: old_description[1]
+                        }
 
-                            revised_data = {
-                                new_description[0]: new_description[1],
-                                old_description[0]: old_description[1]
-                            }
+                        # change description
+                        result_dict["description"] = {
+                            revised_code: revised_data
+                        }
 
-                            # change description
-                            result_dict["description"] = {
-                                revised_code: revised_data
-                            }
-                    result.append({"icd_code": icd_code, "history": history})
+                result.append({"icd_code": icd_code, "history": history})
 
-                    return result
-                else:
-                    print(f"[{url.split('/')[-1]}] exception. Sleep 30 seconds")
-                    attempt += 1
-                    await asyncio.sleep(30)
-            raise Exception("Max retries")
+                return result
+            else:
+                raise Exception(f"[{url.split('/')[-1]}]")
 
-    async def manage_history(self) -> None:
+    async def manage_data(self) -> None:
         """
         Async method to manage fetching data using HistoryManager
 
@@ -121,7 +117,7 @@ class HistoryParser(BaseICD):
             await history_service.run()
 
 
-def run_history_parsers() -> None:
+def run_data_parsers() -> None:
     """
     Method to run non-billable and billable parsers
 
@@ -140,7 +136,7 @@ def run_history_parsers() -> None:
     )
 
     async def run_parsers():
-        await non_billable_parser.manage_history()
-        await billable_parser.manage_history()
+        await non_billable_parser.manage_data()
+        await billable_parser.manage_data()
 
     asyncio.run(run_parsers())
