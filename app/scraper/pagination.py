@@ -6,17 +6,14 @@ from typing import Type
 from app.db.init_db import SessionLocal
 from app.config import settings
 from app.services.icd_codes.pagination import PaginationService
+from app.services.icd_codes.data_parser import DataParser
+from app.services.icd_codes.retry_decorator import retry
 
 from app.db.models.pagination import PaginationBaseModel, PaginationBillModel, PaginationNonBillModel
-from app.services.icd_codes.retry_decorator import retry
 
 
 class PaginationParser:
-    def __init__(
-            self,
-            base_url: str,
-            pagination_model: Type[PaginationBaseModel]
-    ) -> None:
+    def __init__(self, base_url, pagination_model) -> None:
         """
         :param base_url: base URL to parse pagination data from
         :param pagination_model: model to manage pagination data
@@ -52,7 +49,7 @@ class PaginationParser:
 
                 return [f"{url}{i}" for i in range(1, last_index + 1)]
             else:
-                raise Exception(f"[{url.split('/')[-2]}]")
+                raise Exception(f"[{url.split('/')[-2]}] exception")
 
     async def main(self):
         async with aiohttp.ClientSession() as session:
@@ -81,24 +78,26 @@ class PaginationParser:
 
 def run_data_parsers() -> None:
     """
-    Run billable and non-billable parsers
+    Run non-billable and billable parsers
 
     :return: None
 
     """
 
-    non_billable_parser = PaginationParser(
+    non_bill_parser = PaginationParser(
         base_url=settings.non_billable_url,
         pagination_model=PaginationNonBillModel
     )
 
-    billable_parser = PaginationParser(
+    bill_parser = PaginationParser(
         base_url=settings.billable_url,
         pagination_model=PaginationBillModel
     )
 
-    async def run_parsers():
-        await non_billable_parser.manage_data()
-        await billable_parser.manage_data()
+    data_parser = DataParser(
+        non_bill_parser=non_bill_parser,
+        bill_parser=bill_parser,
+        action=None
+    )
 
-    asyncio.run(run_parsers())
+    data_parser.run_data_parsers()

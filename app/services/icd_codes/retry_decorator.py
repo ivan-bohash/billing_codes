@@ -11,7 +11,7 @@ def retry(max_attempts=5, delay=30):
                 try:
                     return await func(*args, **kwargs)
                 except Exception as e:
-                    print(f"{e} exception: sleep {delay} seconds")
+                    print(f"{e}: sleep {delay} seconds")
                     attempt += 1
                     await asyncio.sleep(delay)
             raise Exception("Max retries exceeded")

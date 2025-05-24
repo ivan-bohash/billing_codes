@@ -7,11 +7,12 @@ from app.config import settings
 from app.scraper.base_icd import BaseICD
 from app.db.init_db import SessionLocal
 from app.services.icd_codes.urls import UrlsService
+from app.services.icd_codes.data_parser import DataParser
+from app.services.icd_codes.retry_decorator import retry
 
 from app.db.models.pagination import PaginationBaseModel, PaginationBillModel, PaginationNonBillModel
 from app.db.models.url import UrlsBaseModel, UrlsBillModel, UrlsNonBillModel
 from app.db.models.history import HistoryBaseModel, HistoryBillModel, HistoryNonBillModel
-from app.services.icd_codes.retry_decorator import retry
 
 
 class UrlParser(BaseICD):
@@ -20,13 +21,7 @@ class UrlParser(BaseICD):
 
     """
 
-    def __init__(
-            self,
-            pagination_model: Type[PaginationBaseModel],
-            urls_model: Type[UrlsBaseModel],
-            opposite_urls_model: Type[UrlsBaseModel],
-            history_model: Type[HistoryBaseModel]
-    ) -> None:
+    def __init__(self, pagination_model, urls_model, opposite_urls_model, history_model) -> None:
         """
         :param pagination_model: pagination model
         :param urls_model: current url model
@@ -73,7 +68,7 @@ class UrlParser(BaseICD):
 
                 return result
             else:
-                raise Exception(f"[{url.split('/')[-1]}]")
+                raise Exception(f"[{url.split('/')[-1]}] exception")
 
     async def manage_data(self, action: str) -> None:
         """
@@ -112,22 +107,25 @@ def run_data_parsers(action: str) -> None:
 
     """
 
-    non_billable_parser = UrlParser(
+    non_bill_parser = UrlParser(
         pagination_model=PaginationNonBillModel,
         urls_model=UrlsNonBillModel,
         opposite_urls_model=UrlsBillModel,
         history_model=HistoryNonBillModel
     )
 
-    billable_parser = UrlParser(
+    bill_parser = UrlParser(
         pagination_model=PaginationBillModel,
         urls_model=UrlsBillModel,
         opposite_urls_model=UrlsNonBillModel,
         history_model=HistoryBillModel
     )
 
-    async def run_parsers():
-        await non_billable_parser.manage_data(action)
-        await billable_parser.manage_data(action)
+    data_parser = DataParser(
+        bill_parser=bill_parser,
+        non_bill_parser=non_bill_parser,
+        action=action
+    )
 
-    asyncio.run(run_parsers())
+    data_parser.run_data_parsers()
+

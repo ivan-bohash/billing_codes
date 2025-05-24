@@ -7,11 +7,13 @@ from aiohttp import ClientSession
 from app.config import settings
 from app.db.init_db import SessionLocal
 from app.scraper.base_icd import BaseICD
+
+from app.services.icd_codes.data_parser import DataParser
 from app.services.icd_codes.history import HistoryService
+from app.services.icd_codes.retry_decorator import retry
 
 from app.db.models.url import UrlsBaseModel, UrlsBillModel, UrlsNonBillModel
 from app.db.models.history import HistoryBaseModel, HistoryBillModel, HistoryNonBillModel
-from app.services.icd_codes.retry_decorator import retry
 
 
 class HistoryParser(BaseICD):
@@ -20,11 +22,7 @@ class HistoryParser(BaseICD):
 
     """
 
-    def __init__(
-            self,
-            urls_model: Type[UrlsBaseModel],
-            history_model: Type[HistoryBaseModel]
-    ) -> None:
+    def __init__(self, urls_model, history_model) -> None:
         """
         :param urls_model: url model that stores URLs to parse
         :param history_model: history model where parsed data are saved
@@ -98,7 +96,7 @@ class HistoryParser(BaseICD):
 
                 return result
             else:
-                raise Exception(f"[{url.split('/')[-1]}]")
+                raise Exception(f"[{url.split('/')[-1]}] exception")
 
     async def manage_data(self) -> None:
         """
@@ -119,24 +117,26 @@ class HistoryParser(BaseICD):
 
 def run_data_parsers() -> None:
     """
-    Method to run non-billable and billable parsers
+    Run non-billable and billable parsers
 
     :return: None
 
     """
 
-    non_billable_parser = HistoryParser(
+    non_bill_parser = HistoryParser(
         urls_model=UrlsNonBillModel,
         history_model=HistoryNonBillModel
     )
 
-    billable_parser = HistoryParser(
+    bill_parser = HistoryParser(
         urls_model=UrlsBillModel,
         history_model=HistoryBillModel
     )
 
-    async def run_parsers():
-        await non_billable_parser.manage_data()
-        await billable_parser.manage_data()
+    data_parser = DataParser(
+        non_bill_parser=non_bill_parser,
+        bill_parser=bill_parser,
+        action=None
+    )
 
-    asyncio.run(run_parsers())
+    data_parser.run_data_parsers()
