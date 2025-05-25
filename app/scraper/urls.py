@@ -1,4 +1,3 @@
-import asyncio
 from lxml import html
 from typing import Type
 from aiohttp import ClientSession
@@ -128,4 +127,3 @@ def run_data_parsers(action: str) -> None:
     )
 
     data_parser.run_data_parsers()
-
