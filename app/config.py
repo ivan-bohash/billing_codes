@@ -4,6 +4,11 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    DATA_PARTITION: int = 200
+
+    billable_url: str = "https://www.icd10data.com/ICD10CM/Codes/Rules/Billable_Specific_Codes/"
+    non_billable_url: str = "https://www.icd10data.com/ICD10CM/Codes/Rules/Non_Billable_Specific_Codes/"
+
     headers: dict = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -19,14 +24,8 @@ class Settings(BaseSettings):
         "Sec-Fetch-User": "?1"
     }
 
-    DATA_PARTITION: int = 200
-
-    billable_url: str = "https://www.icd10data.com/ICD10CM/Codes/Rules/Billable_Specific_Codes/"
-    non_billable_url: str = "https://www.icd10data.com/ICD10CM/Codes/Rules/Non_Billable_Specific_Codes/"
-
     redis: dict = {
         # "host": "localhost",
-        # "db": 0,
         "host": os.getenv("REDIS_HOST", "localhost"),
         "port": os.getenv("REDIS_PORT", 6379),
         "db": 0,

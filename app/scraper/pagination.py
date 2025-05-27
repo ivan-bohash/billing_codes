@@ -1,5 +1,4 @@
 import aiohttp
-import asyncio
 from lxml import html
 from typing import Type
 
