@@ -3,4 +3,5 @@
 /airflow/
 .idea/
 __pycache__/
+.env
 

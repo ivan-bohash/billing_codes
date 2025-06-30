@@ -1,18 +1,19 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
+import os
+from dotenv import load_dotenv
 
-db_path = "postgresql+psycopg2://admin:admin@localhost:5432/icd_codes"
+
+load_dotenv()
+
+db_user = os.getenv("DB_USER")
+db_password = os.getenv("DB_PASSWORD")
+db_host = os.getenv("DB_HOST")
+db_port = os.getenv("DB_PORT")
+db_name = os.getenv("DB_NAME")
+
+db_path = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 engine = create_engine(db_path)
-
-# SQLite
-# db_path = "sqlite:////home/ivan/Projects/icd_codes/data/icd_codes.db"
-# engine = create_engine(
-#     db_path,
-#     connect_args={"check_same_thread": False},
-# )
-
-# Docker
-# db_path = "sqlite:////app/data/icd_codes.db"
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
